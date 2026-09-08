@@ -9,6 +9,7 @@ export default {
       fontFamily: {
         sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
         body: ['Inter', 'system-ui', 'sans-serif'],
+        script: ['Caveat', 'cursive', 'sans-serif'],
       },
       colors: {
         brand: {

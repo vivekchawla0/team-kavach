@@ -8,6 +8,9 @@ import {
   TimeRange,
   SimulatorScenario,
   MLSensorForecastResponse,
+  BlynkStatusResponse,
+  BlynkTestResponse,
+  BlynkAlertResponse,
 } from '@/types';
 
 const API_BASE = window.location.origin.includes(':8000')
@@ -96,6 +99,31 @@ export const api = {
   getMLModels: async (): Promise<any> => {
     const res = await fetch(`${API_BASE}/ml/models`);
     return handleResponse<any>(res);
+  },
+
+  getBlynkStatus: async (): Promise<BlynkStatusResponse> => {
+    const res = await fetch(`${API_BASE}/blynk/status`);
+    return handleResponse<BlynkStatusResponse>(res);
+  },
+
+  testBlynkConnection: async (): Promise<BlynkTestResponse> => {
+    const res = await fetch(`${API_BASE}/blynk/test`, {
+      method: 'POST',
+    });
+    return handleResponse<BlynkTestResponse>(res);
+  },
+
+  triggerBlynkAlert: async (
+    action: 'trigger' | 'clear' = 'trigger',
+    pin: string = 'v0',
+    value?: number
+  ): Promise<BlynkAlertResponse> => {
+    const res = await fetch(`${API_BASE}/blynk/alert`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, pin, value }),
+    });
+    return handleResponse<BlynkAlertResponse>(res);
   },
 };
 

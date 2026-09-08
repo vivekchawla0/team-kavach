@@ -1,20 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, ChevronDown, CloudRain } from 'lucide-react';
+import {
+  Droplets,
+  CloudRain,
+  Thermometer,
+  Radio,
+  MapPin,
+  Activity,
+  Brain,
+  Shield,
+  CloudSun,
+} from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
+import { weatherService, CurrentWeatherData } from '@/services/weatherService';
 
 export const Header: React.FC = () => {
-  const { weatherCurrent, alerts } = useDashboard();
-  const [timeStr, setTimeStr] = useState('14:32');
-  const [dateStr, setDateStr] = useState('Mon, 8 Sep 2025');
+  const { summary } = useDashboard();
+  const [liveWeather, setLiveWeather] = useState<CurrentWeatherData | null>(null);
+  const [timeStr, setTimeStr] = useState('04:06 AM');
+  const [dateStr, setDateStr] = useState('Wed, 9 Sep 2026');
 
-  const activeAlertCount = alerts.filter((a) => a.status === 'ACTIVE').length;
+  const waterLevel = summary?.average_water_level_m ?? 3.17;
+  const rainfall = summary?.current_rainfall_mm_hr ?? 65;
 
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      const hours = String(now.getHours()).padStart(2, '0');
-      const mins = String(now.getMinutes()).padStart(2, '0');
-      setTimeStr(`${hours}:${mins}`);
+      let hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      const hoursStr = String(hours).padStart(2, '0');
+      setTimeStr(`${hoursStr}:${minutes} ${ampm}`);
 
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -25,134 +41,222 @@ export const Header: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    weatherService
+      .fetchLiveWeather()
+      .then((report) => {
+        if (report?.current) {
+          setLiveWeather(report.current);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const temperature = liveWeather ? `${liveWeather.temperature.toFixed(1)}°C` : '26.9°C';
+  const weatherDesc = liveWeather?.weatherCondition || 'Mostly Clear';
+
   return (
-    <header className="relative min-h-[240px] px-6 sm:px-10 lg:px-12 py-6 flex flex-col justify-between overflow-hidden text-white">
-      {/* Background Image & Gradient Overlay */}
+    <header className="relative w-full overflow-hidden bg-gradient-to-b from-sky-50/50 via-white to-slate-50/80 border-b border-slate-200/80">
+      {/* Scenic Assam River Landscape Background - Aligned Right with Soft Left Fade */}
       <div
-        className="absolute inset-0 bg-cover bg-[center_38%] scale-[1.02] brightness-90 z-0"
+        className="absolute inset-y-0 right-0 w-full lg:w-[68%] bg-cover bg-[center_35%] pointer-events-none opacity-85 transition-opacity duration-700"
         style={{ backgroundImage: "url('/assets/hero.jpg')" }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/60 via-slate-900/75 to-slate-900/90 z-0" />
 
-      {/* Top Utility Bar */}
-      <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
-        {/* Project Branding: JAL SUCHAK */}
-        <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-cyan-400 to-teal-400 p-[1.5px] shadow-lg shadow-sky-500/20 flex items-center justify-center shrink-0">
-            <div className="w-full h-full bg-slate-950/75 backdrop-blur-sm rounded-[10px] flex items-center justify-center">
-              <svg className="w-6 h-5" viewBox="0 0 36 28" fill="none">
-                <path d="M2 14C6 8 10 8 14 14C18 20 22 20 26 14C30 8 34 8 34 8" stroke="#38bdf8" strokeWidth="3" strokeLinecap="round" />
-                <path d="M2 20C6 14 10 14 14 20C18 26 22 26 26 20C30 14 34 14 34 14" stroke="#7dd3fc" strokeWidth="3" strokeLinecap="round" />
-                <path d="M2 8C6 2 10 2 14 8C18 14 22 14 26 8C30 2 34 2 34 2" stroke="#0284c7" strokeWidth="3" strokeLinecap="round" />
-              </svg>
-            </div>
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2.5">
-              <span className="font-extrabold text-xl tracking-wider text-white uppercase drop-shadow">
-                JAL SUCHAK
-              </span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/25 text-sky-300 border border-sky-400/35 tracking-widest uppercase">
-                Early Warning System
-              </span>
-            </div>
-            <span className="text-[10.5px] font-medium text-slate-300 tracking-wide">
-              जल सूचक • Real-Time River Telemetry & Flood Early Warning Platform
-            </span>
-          </div>
-        </div>
+      {/* Atmospheric Soft Gradient Fade (Smooth transition so left text is 100% readable) */}
+      <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-transparent pointer-events-none hidden sm:block lg:w-[48%]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-white/40 pointer-events-none" />
 
-        {/* Search, Notifications & User */}
-        <div className="flex items-center gap-3.5">
-          {/* Search Box */}
-          <div className="relative flex items-center">
-            <Search className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search sensors, locations..."
-              className="bg-white text-slate-800 text-xs pl-9 pr-14 py-2 rounded-full border border-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500 w-60 focus:w-72 transition-all placeholder:text-slate-400"
-            />
-            <kbd className="absolute right-3 bg-slate-100 border border-slate-200 text-slate-500 text-[10px] font-semibold px-1.5 py-0.5 rounded">
-              ⌘ K
-            </kbd>
-          </div>
+      {/* Subtle Assam Topographic Silhouette Graphic on far right */}
+      <div className="absolute top-4 right-10 pointer-events-none hidden xl:flex flex-col items-center opacity-40">
+        <svg className="w-28 h-20 text-sky-800" viewBox="0 0 120 80" fill="currentColor">
+          <path d="M10,40 Q25,25 45,35 T75,20 T105,30 Q115,45 100,60 T60,65 T20,55 Z" opacity="0.15" />
+          <circle cx="85" cy="35" r="3" fill="#0284c7" />
+        </svg>
+        <span className="text-[10px] font-bold tracking-widest uppercase text-sky-900/60 -mt-2">
+          Assam
+        </span>
+      </div>
 
-          {/* Notifications */}
-          <button
-            className="w-9 h-9 rounded-full bg-white/90 hover:bg-white text-slate-700 flex items-center justify-center relative shadow-sm transition-transform hover:-translate-y-0.5"
-            title="View Alerts"
-          >
-            <Bell className="w-4 h-4" />
-            {activeAlertCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9.5px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
-                {activeAlertCount}
-              </span>
-            )}
-          </button>
-
-          {/* User Badge */}
-          <div className="flex items-center gap-2.5 bg-white/90 hover:bg-white text-slate-900 px-2.5 py-1 rounded-full shadow-sm cursor-pointer transition-colors">
-            <div className="w-7 h-7 rounded-full bg-slate-800 text-white font-bold text-xs flex items-center justify-center">
-              VC
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-xs font-bold leading-tight">Vivek Chawla</span>
-              <span className="text-[9.5px] text-slate-500 leading-none">Administrator</span>
-            </div>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
-          </div>
+      {/* Decorative Handwritten Environmental Script over the scenic landscape */}
+      <div className="absolute top-7 left-[45%] lg:left-[48%] xl:left-[50%] hidden md:block pointer-events-none z-10">
+        <div className="font-script text-slate-700/80 text-xl lg:text-2xl font-bold leading-tight -rotate-3 select-none drop-shadow-xs">
+          Safer Rivers
+          <br />
+          <span className="ml-3">Stronger Communities</span>
+          <br />
+          <span className="ml-7">A Resilient Assam</span>
         </div>
       </div>
 
-      {/* Hero Content & Weather Widget */}
-      <div className="relative z-10 flex items-end justify-between mt-auto pt-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white drop-shadow-md">
-            Real-Time Flood Monitoring
-          </h1>
-          <p className="text-sm text-slate-200/90 font-normal mt-1 drop-shadow">
-            Early insights. Faster response. Safer communities.
-          </p>
-        </div>
+      {/* Main Container */}
+      <div className="relative z-20 px-5 sm:px-8 lg:px-10 py-5 sm:py-6 max-w-[1920px] mx-auto flex flex-col gap-6">
+        {/* Top Branding Bar */}
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          {/* Logo & Brand Identity */}
+          <div className="flex items-center gap-3.5">
+            {/* Custom 3-Wave Hydrodynamic Brand Mark */}
+            <div className="w-12 h-12 flex items-center justify-center shrink-0">
+              <svg className="w-11 h-11" viewBox="0 0 44 44" fill="none">
+                {/* 3 Fluid Curved Waves Stacked Vertically */}
+                <path
+                  d="M6 15C11 11 16 11 22 15C28 19 33 19 38 15"
+                  stroke="#38bdf8"
+                  strokeWidth="3.2"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M6 22C11 18 16 18 22 22C28 26 33 26 38 22"
+                  stroke="#0284c7"
+                  strokeWidth="3.2"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M7 29C12 25 17 25 22 29C27 33 32 33 37 29"
+                  stroke="#0369a1"
+                  strokeWidth="3.2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
 
-        {/* Live Clock & Glass Weather Pill */}
-        <div className="flex items-center gap-4">
-          <div className="text-right flex flex-col items-end">
-            <span className="text-[11.5px] font-medium text-slate-300">{dateStr}</span>
-            <span className="text-2xl font-extrabold text-white tracking-tight leading-none mt-0.5">
-              {timeStr}
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 mt-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              Live Data
-            </span>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2.5">
+                <span className="font-extrabold text-2xl tracking-tight text-slate-900 font-sans">
+                  Jal Suchak
+                </span>
+                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200/80 tracking-wider uppercase">
+                  EARLY WARNING SYSTEM
+                </span>
+              </div>
+              <span className="text-[11.5px] font-medium text-slate-500 tracking-wide">
+                जल सूचक • Real-Time River Intelligence & Flood Early Warning
+              </span>
+            </div>
           </div>
 
-          {/* Glass Weather Widget */}
-          <div className="flex items-center gap-4 bg-slate-900/65 backdrop-blur-md border border-white/15 rounded-2xl px-4 py-2.5 shadow-xl">
-            <div className="flex items-center gap-3 pr-3.5 border-r border-white/15">
-              <CloudRain className="w-7 h-7 text-sky-400" />
-              <div>
-                <span className="text-lg font-extrabold text-white leading-none block">
-                  {weatherCurrent ? `${Math.round(weatherCurrent.temperature)}°C` : '12°C'}
-                </span>
-                <span className="text-[11px] text-slate-300 font-medium">
-                  {weatherCurrent?.weather_condition || 'Light Rain'}
-                </span>
+          {/* Minimal Location Badge (Top-Right) */}
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 backdrop-blur-sm border border-slate-200 text-xs font-semibold text-slate-700 shadow-2xs">
+            <MapPin className="w-3.5 h-3.5 text-sky-600" />
+            <span>Barpeta Station FW-001</span>
+            <span className="text-slate-300">•</span>
+            <span className="text-slate-500 font-medium">Assam, India</span>
+          </div>
+        </div>
+
+        {/* Hero Body: Left Typography + Right Floating LIVE TELEMETRY Card */}
+        <div className="flex items-end justify-between flex-wrap lg:flex-nowrap gap-6 pt-2 pb-1">
+          {/* Left Column: Heading, Tagline & 3 Capability Badges */}
+          <div className="flex flex-col max-w-xl">
+            <h1 className="text-3xl sm:text-4xl lg:text-[44px] font-extrabold tracking-tight text-slate-900 leading-[1.12]">
+              Real-Time
+              <br />
+              <span className="text-sky-600">Flood Intelligence</span>
+            </h1>
+            <p className="text-sm sm:text-base text-slate-500 font-normal mt-2.5 leading-relaxed">
+              Monitoring rivers. Predicting floods. Protecting communities.
+            </p>
+
+            {/* 3 Capability Pills */}
+            <div className="flex items-center flex-wrap gap-2.5 mt-5">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 border border-slate-200/90 text-xs font-bold text-slate-700 shadow-2xs">
+                <div className="w-5 h-5 rounded-full bg-sky-100 flex items-center justify-center text-sky-600">
+                  <Activity className="w-3 h-3" />
+                </div>
+                <span>Real-Time Monitoring</span>
+              </div>
+
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 border border-slate-200/90 text-xs font-bold text-slate-700 shadow-2xs">
+                <div className="w-5 h-5 rounded-full bg-sky-100 flex items-center justify-center text-sky-600">
+                  <Brain className="w-3 h-3" />
+                </div>
+                <span>AI-Powered Forecasts</span>
+              </div>
+
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 border border-slate-200/90 text-xs font-bold text-slate-700 shadow-2xs">
+                <div className="w-5 h-5 rounded-full bg-sky-100 flex items-center justify-center text-sky-600">
+                  <Shield className="w-3 h-3" />
+                </div>
+                <span>Disaster Resilience</span>
               </div>
             </div>
-            <div className="flex flex-col gap-0.5 text-xs">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-400 text-[11px]">Humidity</span>
-                <strong className="font-semibold text-white">
-                  {weatherCurrent ? `${Math.round(weatherCurrent.humidity)}%` : '78%'}
-                </strong>
+          </div>
+
+          {/* Right Column: Floating LIVE TELEMETRY Card matching reference image */}
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200 shadow-md shadow-slate-200/60 p-4 sm:p-5 w-full sm:w-[340px] shrink-0 transition-all">
+            {/* Top Row: Title & Online Badge */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Radio className="w-4 h-4 text-sky-600 animate-pulse" />
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-800">
+                  LIVE TELEMETRY
+                </span>
               </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-400 text-[11px]">Wind</span>
-                <strong className="font-semibold text-white">
-                  {weatherCurrent ? `${Math.round(weatherCurrent.wind_speed)} km/h` : '15 km/h'}
-                </strong>
+              <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                ONLINE
+              </div>
+            </div>
+
+            {/* Middle Row: Time/Date & Temperature */}
+            <div className="flex items-center justify-between py-3">
+              <div>
+                <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight font-sans">
+                  {timeStr}
+                </div>
+                <div className="text-xs text-slate-400 font-medium mt-0.5">
+                  {dateStr}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-right">
+                <div className="w-9 h-9 rounded-xl bg-sky-50 flex items-center justify-center text-sky-500">
+                  <CloudSun className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-xl font-extrabold text-slate-900 tracking-tight">
+                    {temperature}
+                  </div>
+                  <div className="text-[11px] text-slate-400 font-medium">
+                    {weatherDesc}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Row: 3 Metrics Horizontal Bar */}
+            <div className="pt-3 border-t border-slate-100 grid grid-cols-3 gap-2 text-center">
+              {/* Water Level */}
+              <div className="flex flex-col items-center">
+                <div className="flex items-center gap-1 text-slate-400 text-[11px] font-medium">
+                  <Droplets className="w-3 h-3 text-sky-500" />
+                  <span>Water Level</span>
+                </div>
+                <span className="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5">
+                  {waterLevel.toFixed(2)} m
+                </span>
+              </div>
+
+              {/* Rainfall */}
+              <div className="flex flex-col items-center">
+                <div className="flex items-center gap-1 text-slate-400 text-[11px] font-medium">
+                  <CloudRain className="w-3 h-3 text-sky-500" />
+                  <span>Rainfall</span>
+                </div>
+                <span className="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5">
+                  {Math.round(rainfall)} mm/hr
+                </span>
+              </div>
+
+              {/* Temperature */}
+              <div className="flex flex-col items-center">
+                <div className="flex items-center gap-1 text-slate-400 text-[11px] font-medium">
+                  <Thermometer className="w-3 h-3 text-rose-500" />
+                  <span>Temperature</span>
+                </div>
+                <span className="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5">
+                  {temperature}
+                </span>
               </div>
             </div>
           </div>

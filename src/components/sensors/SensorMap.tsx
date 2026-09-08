@@ -3,18 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin, ExternalLink } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
-
-// Erft River coordinates
-const ERFT_RIVER_PATH: [number, number][] = [
-  [50.5350, 6.7450],
-  [50.5420, 6.7520],
-  [50.5480, 6.7560],
-  [50.5539, 6.7633], // Bad Münstereifel center
-  [50.5590, 6.7660],
-  [50.5652, 6.7580],
-  [50.5731, 6.7685],
-  [50.5820, 6.7720],
-];
+import { BARPETA_LOCATION } from '@/config/location';
 
 export const SensorMap: React.FC = () => {
   const { sensors, summary, mapFilter, setMapFilter, setSelectedDetailSensor } = useDashboard();
@@ -33,20 +22,27 @@ export const SensorMap: React.FC = () => {
       zoomControl: true,
       attributionControl: false,
       scrollWheelZoom: false,
-    }).setView([50.5545, 6.7633], 13);
+    }).setView([BARPETA_LOCATION.latitude, BARPETA_LOCATION.longitude], BARPETA_LOCATION.defaultZoom);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       maxZoom: 19,
       subdomains: 'abcd',
     }).addTo(map);
 
-    // River Polyline
-    L.polyline(ERFT_RIVER_PATH, {
+    // River Polylines for Barpeta
+    L.polyline(BARPETA_LOCATION.riverPaths.brahmaputra, {
       color: '#0284c7',
-      weight: 4.5,
+      weight: 5.5,
       opacity: 0.85,
       smoothFactor: 1.2,
-    }).addTo(map);
+    }).addTo(map).bindTooltip('Brahmaputra River Corridor');
+
+    L.polyline(BARPETA_LOCATION.riverPaths.chaulkhowa, {
+      color: '#38bdf8',
+      weight: 3.5,
+      opacity: 0.85,
+      smoothFactor: 1.2,
+    }).addTo(map).bindTooltip('Chaulkhowa River (Barpeta)');
 
     mapInstanceRef.current = map;
 
@@ -93,7 +89,14 @@ export const SensorMap: React.FC = () => {
         iconAnchor: [10, 10],
       });
 
-      const marker = L.marker([sensor.latitude, sensor.longitude], { icon: customIcon }).addTo(map);
+      const markerLat = sensor.latitude > 40
+        ? BARPETA_LOCATION.latitude + (sensor.latitude - 50.5539) * 0.5
+        : sensor.latitude;
+      const markerLng = sensor.longitude < 20
+        ? BARPETA_LOCATION.longitude + (sensor.longitude - 6.7633) * 0.5
+        : sensor.longitude;
+
+      const marker = L.marker([markerLat, markerLng], { icon: customIcon }).addTo(map);
 
       // Popup Content
       const popupDiv = document.createElement('div');

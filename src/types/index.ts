@@ -203,3 +203,30 @@ export interface WebSocketTelemetryEvent {
   timestamp?: string;
 }
 
+export interface BlynkStatusResponse {
+  success: boolean;
+  connected: boolean;
+  device: string;
+  template?: string;
+  status?: string;
+  message?: string;
+  cloud_reachable?: boolean;
+}
+
+export interface BlynkTestResponse {
+  success: boolean;
+  message: string;
+  device?: string;
+  connected?: boolean;
+}
+
+export interface BlynkAlertResponse {
+  success: boolean;
+  message: string;
+  device?: string;
+  pin?: string;
+  value?: number;
+  alert_active?: boolean;
+}
+
+

@@ -10,7 +10,8 @@ from app.api.v1.endpoints import (
     telemetry,
     simulation,
     reports,
-    ml
+    ml,
+    blynk
 )
 
 api_router = APIRouter()
@@ -26,4 +27,6 @@ api_router.include_router(telemetry.router, prefix="/telemetry", tags=["IoT Tele
 api_router.include_router(simulation.router, prefix="/simulation", tags=["Simulation"])
 api_router.include_router(reports.router, prefix="/reports", tags=["Reports"])
 api_router.include_router(ml.router, prefix="/ml", tags=["Machine Learning"])
+api_router.include_router(blynk.router, prefix="/blynk", tags=["Blynk Cloud Integration"])
+
 

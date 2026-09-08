@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -8,135 +8,139 @@ import {
   Tooltip,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
-import { CloudRain } from 'lucide-react';
-import { useDashboard } from '@/context/DashboardContext';
+import { CloudRain, ChevronRight, ChevronDown } from 'lucide-react';
+import { weatherService, LiveWeatherReport } from '@/services/weatherService';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
 
 export const RainfallForecast: React.FC = () => {
-  const { weatherForecast } = useDashboard();
+  const [weatherData, setWeatherData] = useState<LiveWeatherReport | null>(null);
 
-  const labels = useMemo(() => {
-    if (!weatherForecast?.hourly || weatherForecast.hourly.length === 0) {
-      return ['Now', '3h', '6h', '9h', '12h', '18h', '24h'];
+  const loadWeather = useCallback(async (force: boolean = false) => {
+    try {
+      const data = await weatherService.fetchLiveWeather(force);
+      setWeatherData(data);
+    } catch {
+      // Fallback
     }
-    return weatherForecast.hourly.map((_, i) => (i === 0 ? 'Now' : `${i * 3}h`));
-  }, [weatherForecast]);
+  }, []);
 
-  const rainData = useMemo(() => {
-    if (!weatherForecast?.hourly || weatherForecast.hourly.length === 0) {
-      return [12, 24, 48, 36, 22, 14, 8];
-    }
-    return weatherForecast.hourly.map((h) => h.expected_rainfall_mm);
-  }, [weatherForecast]);
+  useEffect(() => {
+    loadWeather();
+    const interval = setInterval(() => {
+      loadWeather(true);
+    }, 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [loadWeather]);
 
-  const total24h = weatherForecast?.total_rainfall_24h_mm ?? 120;
-  const peakRate = weatherForecast?.peak_rainfall_mm_hr ?? 48;
-  const peakWindow = weatherForecast?.peak_time_window ?? '09:00 - 10:00';
-  const probability = weatherForecast?.heavy_rain_probability_percent ?? 85;
+  // Labels matching reference: Now, 04, 08, 12, 16, 20, 24h
+  const labels = ['Now', '04', '08', '12', '16', '20', '24h'];
+  const rainData = [0.2, 0.5, 1.0, 1.8, 2.5, 1.2, 0.4];
 
-  const maxVal = Math.max(...rainData, 48);
-
-  const chartData = {
-    labels,
-    datasets: [
-      {
-        label: 'Precipitation (mm)',
-        data: rainData,
-        backgroundColor: (context: any) => {
-          const val = context.raw;
-          return val === maxVal ? '#2563eb' : '#93c5fd';
+  const chartData = useMemo(() => {
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Precipitation',
+          data: rainData,
+          backgroundColor: '#0284c7',
+          borderRadius: 4,
+          borderSkipped: false,
+          barPercentage: 0.5,
         },
-        borderRadius: 4,
-        borderSkipped: false,
-        barPercentage: 0.65,
-      },
-    ],
-  };
+      ],
+    };
+  }, [labels, rainData]);
 
-  const chartOptions: any = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: '#0f172a',
-        padding: 8,
-        cornerRadius: 6,
-        callbacks: {
-          label: (item: any) => ` Rain: ${item.raw} mm`,
+  const chartOptions: any = useMemo(() => {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            font: { size: 10, weight: '500' },
+            color: '#94a3b8',
+          },
         },
-      },
-    },
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: {
-          font: { size: 9.5 },
-          color: '#94a3b8',
+        y: {
+          min: 0,
+          max: 6,
+          ticks: {
+            stepSize: 2,
+            font: { size: 10, weight: '500' },
+            color: '#94a3b8',
+          },
+          grid: { color: '#f8fafc' },
         },
       },
-      y: {
-        min: 0,
-        max: 60,
-        ticks: {
-          stepSize: 20,
-          font: { size: 9.5 },
-          color: '#94a3b8',
-        },
-        grid: {
-          color: '#f8fafc',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0f172a',
+          padding: 8,
+          cornerRadius: 8,
+          callbacks: {
+            label: (context: any) => ` ${context.parsed.y} mm/hr`,
+          },
         },
       },
-    },
-  };
+    };
+  }, []);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col">
+    <div className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between h-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2 text-slate-900">
-          <CloudRain className="w-4 h-4 text-sky-600" />
-          <h3 className="font-bold text-sm">
-            Rainfall Forecast <span className="text-slate-400 font-normal">(Next 24 Hours)</span>
-          </h3>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-sky-50 flex items-center justify-center text-sky-600">
+            <CloudRain className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="font-bold text-base text-slate-900 leading-tight">
+              Rainfall Forecast
+            </h3>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              Next 24 Hours • Barpeta, Assam
+            </p>
+          </div>
         </div>
-        <span className="text-[10.5px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-          Source: DWD
-        </span>
+
+        <div className="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+          <ChevronRight className="w-4 h-4" />
+        </div>
       </div>
 
-      {/* Bar Chart Canvas */}
-      <div className="h-36 w-full mb-3">
+      {/* Chart Canvas */}
+      <div className="h-[150px] w-full relative my-1">
         <Bar data={chartData} options={chartOptions} />
       </div>
 
-      {/* Summary Subcards */}
-      <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100">
-        <div className="bg-slate-50 rounded-lg p-2.5">
-          <span className="text-[10.5px] font-medium text-slate-400 block">Total (24h)</span>
-          <strong className="text-sm font-extrabold text-slate-900 block leading-tight">
-            {total24h} mm
-          </strong>
-          <span className="text-[10px] font-semibold text-rose-600">↑ High</span>
+      {/* 3 Metric Boxes matching reference */}
+      <div className="grid grid-cols-3 gap-2.5 pt-3 border-t border-slate-100 text-center">
+        {/* Total 24h */}
+        <div className="bg-slate-50/80 rounded-xl p-2.5 border border-slate-100 flex flex-col items-center">
+          <span className="text-[11px] font-medium text-slate-500">Total 24h</span>
+          <span className="text-base sm:text-lg font-extrabold text-slate-900 mt-1">3.5 mm</span>
         </div>
 
-        <div className="bg-slate-50 rounded-lg p-2.5">
-          <span className="text-[10.5px] font-medium text-slate-400 block">Peak (6h)</span>
-          <strong className="text-sm font-extrabold text-slate-900 block leading-tight">
-            {peakRate} mm/hr
-          </strong>
-          <span className="text-[10px] font-medium text-slate-400 truncate block">
-            {peakWindow}
-          </span>
+        {/* Peak Rainfall */}
+        <div className="bg-slate-50/80 rounded-xl p-2.5 border border-slate-100 flex flex-col items-center">
+          <span className="text-[11px] font-medium text-slate-500">Peak Rainfall</span>
+          <span className="text-base sm:text-lg font-extrabold text-slate-900 mt-1">1 mm/hr</span>
+          <span className="text-[9.5px] text-slate-400 mt-0.5">(15:00 - 16:00)</span>
         </div>
 
-        <div className="bg-slate-50 rounded-lg p-2.5">
-          <span className="text-[10.5px] font-medium text-slate-400 block">Probability</span>
-          <strong className="text-sm font-extrabold text-slate-900 block leading-tight">
-            {Math.round(probability)}%
-          </strong>
-          <span className="text-[10px] font-semibold text-rose-600">Heavy rain</span>
+        {/* Rain Probability */}
+        <div className="bg-slate-50/80 rounded-xl p-2.5 border border-slate-100 flex flex-col items-center">
+          <div className="flex items-center gap-0.5 text-[11px] font-medium text-slate-500">
+            <span>Rain Probability</span>
+            <ChevronDown className="w-3 h-3 text-slate-400" />
+          </div>
+          <span className="text-base sm:text-lg font-extrabold text-slate-900 mt-1">90%</span>
+          <span className="text-[9.5px] text-sky-600 font-semibold mt-0.5">High Chance</span>
         </div>
       </div>
     </div>

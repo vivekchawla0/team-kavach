@@ -59,5 +59,13 @@ class Settings(BaseSettings):
     DEFAULT_LONGITUDE: float = 6.7633
     LOCATION_NAME: str = "Bad Münstereifel, Germany"
 
+    # Blynk Cloud Integration
+    BLYNK_TEMPLATE_ID: str = os.getenv("BLYNK_TEMPLATE_ID", "TMPL3HpkNOZ7w")
+    BLYNK_TEMPLATE_NAME: str = os.getenv("BLYNK_TEMPLATE_NAME", "FloodWatch")
+    BLYNK_DEVICE_NAME: str = os.getenv("BLYNK_DEVICE_NAME", "FloodWatch-Station-01")
+    BLYNK_AUTH_TOKEN: str = os.getenv("BLYNK_AUTH_TOKEN", "")
+    BLYNK_SERVER_URL: str = os.getenv("BLYNK_SERVER_URL", "https://blynk.cloud/external/api")
+
 
 settings = Settings()
+
