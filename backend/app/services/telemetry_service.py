@@ -28,9 +28,9 @@ class TelemetryService:
             sensor = Sensor(
                 sensor_id=data.sensor_id,
                 name=f"Sensor {data.sensor_id}",
-                location_name="Erft River Basin",
-                latitude=50.5539,
-                longitude=6.7633,
+                location_name="Chaulkhowa River Basin, Barpeta, Assam",
+                latitude=26.3200,
+                longitude=91.0050,
                 status="NORMAL",
                 warning_threshold=3.0,
                 danger_threshold=4.0,

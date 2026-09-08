@@ -8,11 +8,11 @@ from pydantic import BaseModel, Field, ConfigDict
 # ==========================================
 
 class SensorBase(BaseModel):
-    sensor_id: str = Field(..., example="FW-007")
-    name: str = Field(..., example="Erft Bridge")
-    location_name: str = Field(..., example="Bad Münstereifel Center")
-    latitude: float = Field(..., example=50.5539)
-    longitude: float = Field(..., example=6.7633)
+    sensor_id: str = Field(..., example="FW-001")
+    name: str = Field(..., example="Barpeta Station FW-001")
+    location_name: str = Field(..., example="Barpeta Station, Assam")
+    latitude: float = Field(..., example=26.3200)
+    longitude: float = Field(..., example=91.0050)
     warning_threshold: float = Field(default=3.0, example=3.0)
     danger_threshold: float = Field(default=4.0, example=4.0)
 

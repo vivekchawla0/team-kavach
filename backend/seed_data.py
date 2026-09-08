@@ -49,200 +49,26 @@ def seed_database():
             )
             db.add(admin_user)
 
-        # 2. 13 Realistic Sensors along Erft River & Tributaries in Bad Münstereifel
-        # Lat: ~50.55, Lon: ~6.76
+        # 2. Single Physical Prototype Station at Barpeta, Assam
         sensor_configs = [
             {
                 "sensor_id": "FW-001",
-                "name": "Erft North",
-                "location_name": "Erftverband Gauge N-1",
-                "latitude": 50.5652,
-                "longitude": 6.7580,
-                "status": "NORMAL",
-                "current_water_level": 1.12,
-                "water_rise_rate": 0.02,
-                "battery": 87.0,
+                "name": "Barpeta Station FW-001",
+                "location_name": "Chaulkhowa River Basin, Barpeta, Assam",
+                "latitude": 26.3200,
+                "longitude": 91.0050,
+                "status": "CRITICAL",
+                "current_water_level": 3.17,
+                "water_rise_rate": 0.24,
+                "battery": 82.0,
                 "signal_strength": -68.0,
                 "warning_threshold": 3.0,
                 "danger_threshold": 4.0,
             },
-            {
-                "sensor_id": "FW-002",
-                "name": "Riverbank A",
-                "location_name": "Iversheim Riverwalk",
-                "latitude": 50.5731,
-                "longitude": 6.7685,
-                "status": "NORMAL",
-                "current_water_level": 0.98,
-                "water_rise_rate": 0.01,
-                "battery": 92.0,
-                "signal_strength": -62.0,
-                "warning_threshold": 2.8,
-                "danger_threshold": 3.8,
-            },
-            {
-                "sensor_id": "FW-003",
-                "name": "Stream B",
-                "location_name": "Schleidbach Confluence",
-                "latitude": 50.5574,
-                "longitude": 6.7512,
-                "status": "WARNING",
-                "current_water_level": 2.84,
-                "water_rise_rate": 0.12,
-                "battery": 76.0,
-                "signal_strength": -71.0,
-                "warning_threshold": 2.5,
-                "danger_threshold": 3.5,
-            },
-            {
-                "sensor_id": "FW-004",
-                "name": "Mill Creek",
-                "location_name": "Eschweiler Bach Junction",
-                "latitude": 50.5489,
-                "longitude": 6.7721,
-                "status": "WARNING",
-                "current_water_level": 2.76,
-                "water_rise_rate": 0.18,
-                "battery": 81.0,
-                "signal_strength": -74.0,
-                "warning_threshold": 2.5,
-                "danger_threshold": 3.6,
-            },
-            {
-                "sensor_id": "FW-005",
-                "name": "City Center Weir",
-                "location_name": "Bad Münstereifel Historic Wall",
-                "latitude": 50.5539,
-                "longitude": 6.7633,
-                "status": "NORMAL",
-                "current_water_level": 1.45,
-                "water_rise_rate": 0.04,
-                "battery": 90.0,
-                "signal_strength": -58.0,
-                "warning_threshold": 3.0,
-                "danger_threshold": 4.0,
-            },
-            {
-                "sensor_id": "FW-006",
-                "name": "Orchheimer Gate Bridge",
-                "location_name": "South Erft Culvert",
-                "latitude": 50.5511,
-                "longitude": 6.7645,
-                "status": "NORMAL",
-                "current_water_level": 1.58,
-                "water_rise_rate": 0.05,
-                "battery": 88.0,
-                "signal_strength": -64.0,
-                "warning_threshold": 3.0,
-                "danger_threshold": 4.0,
-            },
-            {
-                "sensor_id": "FW-007",
-                "name": "Erft Bridge",
-                "location_name": "Heisterbacher Gate Passage",
-                "latitude": 50.5558,
-                "longitude": 6.7618,
-                "status": "CRITICAL",  # The reference image hero critical sensor
-                "current_water_level": 3.21,
-                "water_rise_rate": 0.24,
-                "battery": 78.0,
-                "signal_strength": -76.0,
-                "warning_threshold": 2.8,
-                "danger_threshold": 3.2,
-            },
-            {
-                "sensor_id": "FW-008",
-                "name": "Biberbach Inlet",
-                "location_name": "Eicherscheid Forest Catchment",
-                "latitude": 50.5392,
-                "longitude": 6.7811,
-                "status": "NORMAL",
-                "current_water_level": 1.25,
-                "water_rise_rate": 0.03,
-                "battery": 84.0,
-                "signal_strength": -80.0,
-                "warning_threshold": 2.6,
-                "danger_threshold": 3.6,
-            },
-            {
-                "sensor_id": "FW-009",
-                "name": "Quecken Basin",
-                "location_name": "Retention Basin West",
-                "latitude": 50.5605,
-                "longitude": 6.7420,
-                "status": "WARNING",
-                "current_water_level": 2.91,
-                "water_rise_rate": 0.14,
-                "battery": 72.0,
-                "signal_strength": -79.0,
-                "warning_threshold": 2.8,
-                "danger_threshold": 3.8,
-            },
-            {
-                "sensor_id": "FW-010",
-                "name": "Münster Bridge",
-                "location_name": "Marktstrasse Underpass",
-                "latitude": 50.5545,
-                "longitude": 6.7650,
-                "status": "NORMAL",
-                "current_water_level": 1.38,
-                "water_rise_rate": 0.03,
-                "battery": 95.0,
-                "signal_strength": -60.0,
-                "warning_threshold": 3.0,
-                "danger_threshold": 4.2,
-            },
-            {
-                "sensor_id": "FW-011",
-                "name": "Rupperath Siphon",
-                "location_name": "Upstream Tributary R-4",
-                "latitude": 50.5280,
-                "longitude": 6.8010,
-                "status": "NORMAL",
-                "current_water_level": 0.85,
-                "water_rise_rate": 0.01,
-                "battery": 89.0,
-                "signal_strength": -82.0,
-                "warning_threshold": 2.5,
-                "danger_threshold": 3.5,
-            },
-            {
-                "sensor_id": "FW-012",
-                "name": "Schönau Floodway",
-                "location_name": "Erft Upper Valley",
-                "latitude": 50.5190,
-                "longitude": 6.7925,
-                "status": "NORMAL",
-                "current_water_level": 1.05,
-                "water_rise_rate": 0.02,
-                "battery": 94.0,
-                "signal_strength": -70.0,
-                "warning_threshold": 3.0,
-                "danger_threshold": 4.0,
-            },
-            {
-                "sensor_id": "FW-013",
-                "name": "Nöthen Outflow",
-                "location_name": "Nöthen Retention Dam",
-                "latitude": 50.5315,
-                "longitude": 6.7450,
-                "status": "OFFLINE",  # The 1 offline sensor in reference
-                "current_water_level": 1.20,
-                "water_rise_rate": 0.00,
-                "battery": 14.0,      # Drained battery caused offline
-                "signal_strength": -98.0,
-                "warning_threshold": 2.8,
-                "danger_threshold": 3.8,
-            },
         ]
 
-        # Breakdown summary:
-        # Total: 13
-        # Normal: 8 (FW-001, FW-002, FW-005, FW-006, FW-008, FW-010, FW-011, FW-012)
-        # Warning: 3 (FW-003, FW-004, FW-009)
-        # Critical: 1 (FW-007)
-        # Offline: 1 (FW-013)
-        # Exactly matches the reference image: "13 Total Sensors (12 Online | 1 Offline), Normal (8), Warning (3), Critical (1), Offline (1)"!
+        # Prototype summary: 1 Online • 0 Offline
+        # Barpeta Station FW-001 (Assam, India)
 
         now = utcnow()
         for conf in sensor_configs:
@@ -400,15 +226,15 @@ def seed_database():
         db.commit()
 
         # 5. Current Weather Data & 24h Hourly Forecast
-        print("Seeding DWD current weather and 24-hour rainfall forecast...")
+        print("Seeding current weather and 24-hour rainfall forecast for Barpeta, Assam...")
         weather = WeatherData(
-            location_name="Bad Münstereifel, Germany",
-            temperature=12.0,
-            humidity=78.0,
-            wind_speed=15.0,
-            rainfall_current=18.0,
-            atmospheric_pressure=1012.0,
-            weather_condition="Light Rain",
+            location_name="Barpeta, Assam, India",
+            temperature=27.0,
+            humidity=85.0,
+            wind_speed=3.9,
+            rainfall_current=65.0,
+            atmospheric_pressure=999.0,
+            weather_condition="Mostly Clear",
             recorded_at=now,
         )
         db.add(weather)
@@ -481,17 +307,17 @@ def seed_database():
 
         # 8. Initial Report
         report = Report(
-            title="Bad Münstereifel Catchment 24-Hour Hydrologic Summary",
+            title="Barpeta Catchment 24-Hour Hydrologic Summary",
             report_type="24H",
             start_date=now - timedelta(hours=24),
             end_date=now,
             summary_data="""{
-                "average_water_level": 1.42,
-                "maximum_water_level": 3.21,
-                "total_rainfall_mm": 18.4,
-                "active_alerts": 2,
-                "offline_sensors": 1,
-                "critical_events": ["Sensor 7 Danger Threshold Reached"]
+                "average_water_level": 3.17,
+                "maximum_water_level": 3.41,
+                "total_rainfall_mm": 65.0,
+                "active_alerts": 1,
+                "offline_sensors": 0,
+                "critical_events": ["Barpeta Station FW-001 Warning Threshold Exceeded"]
             }""",
             generated_by="Automated Hydrological Engine",
             created_at=now,
@@ -499,7 +325,7 @@ def seed_database():
         db.add(report)
 
         db.commit()
-        print("Successfully seeded all FLOODWATCH database tables!")
+        print("Successfully seeded all JAL SUCHAK database tables!")
 
     except Exception as e:
         db.rollback()

@@ -126,7 +126,7 @@ class WeatherData(Base):
     __tablename__ = "weather_data"
 
     id = Column(Integer, primary_key=True, index=True)
-    location_name = Column(String(255), default="Bad Münstereifel, Germany", nullable=False)
+    location_name = Column(String(255), default="Barpeta, Assam, India", nullable=False)
     temperature = Column(Float, default=12.0, nullable=False)
     humidity = Column(Float, default=78.0, nullable=False)
     wind_speed = Column(Float, default=15.0, nullable=False)

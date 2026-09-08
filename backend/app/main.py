@@ -32,8 +32,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Real-Time Flood Monitoring, Hydrological Telemetry & AI Risk Analysis Platform for Bad Münstereifel",
-    lifespan=lifespan
+    description="Real-Time River Intelligence, Hydrological Telemetry & AI Flood Early Warning Platform for Barpeta, Assam (Jal Suchak)",
+    lifespan=lifespan,
 )
 
 # CORS Middleware

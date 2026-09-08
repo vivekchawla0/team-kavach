@@ -54,10 +54,10 @@ class Settings(BaseSettings):
     SENSOR_OFFLINE_MINUTES: int = 15
     SENSOR_TILT_THRESHOLD_DEG: float = 15.0
 
-    # Geospatial Focus (Bad Münstereifel, Germany)
-    DEFAULT_LATITUDE: float = 50.5539
-    DEFAULT_LONGITUDE: float = 6.7633
-    LOCATION_NAME: str = "Bad Münstereifel, Germany"
+    # Geospatial Focus (Barpeta, Assam, India)
+    DEFAULT_LATITUDE: float = 26.3200
+    DEFAULT_LONGITUDE: float = 91.0050
+    LOCATION_NAME: str = "Barpeta, Assam, India"
 
     # Blynk Cloud Integration
     BLYNK_TEMPLATE_ID: str = os.getenv("BLYNK_TEMPLATE_ID", "TMPL3HpkNOZ7w")

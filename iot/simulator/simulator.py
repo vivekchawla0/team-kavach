@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-FloodWatch IoT Telemetry Simulator
-Simulates 13 river telemetry stations across Bad Münstereifel, Germany,
-sending live water levels, rise rates, rainfall, soil moisture, battery,
-and accelerometer tilt to the FloodWatch backend API via HTTP.
+JAL SUCHAK IoT Telemetry Simulator
+Simulates the single physical prototype river telemetry station at Barpeta Station FW-001,
+Assam, sending live water levels, rise rates, rainfall, soil moisture, battery,
+and accelerometer tilt to the JAL SUCHAK backend API via HTTP.
 """
 
 import sys
@@ -16,21 +16,9 @@ import requests
 BACKEND_URL = "http://localhost:8000/api/v1/telemetry"
 API_KEY = "fw_live_sec_99a8b7c6d5e4"
 
-# 13 Real Sensors along Erft River and tributaries in Bad Münstereifel
+# Single Physical Prototype Station at Barpeta, Assam
 SENSORS = [
-    {"sensor_id": "FW-001", "name": "Erft - North", "base_level": 1.12, "warning": 3.0, "danger": 4.0},
-    {"sensor_id": "FW-002", "name": "Riverbank A", "base_level": 0.98, "warning": 2.8, "danger": 3.8},
-    {"sensor_id": "FW-003", "name": "Stream B", "base_level": 2.84, "warning": 2.5, "danger": 3.5},
-    {"sensor_id": "FW-004", "name": "Mill Creek", "base_level": 3.21, "warning": 3.0, "danger": 4.0},
-    {"sensor_id": "FW-005", "name": "City Center", "base_level": 1.45, "warning": 3.0, "danger": 4.0},
-    {"sensor_id": "FW-006", "name": "Erft South", "base_level": 1.30, "warning": 3.0, "danger": 4.0},
-    {"sensor_id": "FW-007", "name": "Erft Bridge", "base_level": 3.21, "warning": 3.0, "danger": 4.0},
-    {"sensor_id": "FW-008", "name": "Eicherscheid Inflow", "base_level": 1.15, "warning": 2.8, "danger": 3.8},
-    {"sensor_id": "FW-009", "name": "Schleebach Gage", "base_level": 1.05, "warning": 2.5, "danger": 3.5},
-    {"sensor_id": "FW-010", "name": "Iversheim South", "base_level": 2.75, "warning": 3.0, "danger": 4.0},
-    {"sensor_id": "FW-011", "name": "Arloff Bridge", "base_level": 1.40, "warning": 3.0, "danger": 4.0},
-    {"sensor_id": "FW-012", "name": "Kalkar Gage", "base_level": 0.00, "warning": 3.0, "danger": 4.0, "offline": True},
-    {"sensor_id": "FW-013", "name": "Kirspen Weir", "base_level": 2.65, "warning": 3.0, "danger": 4.0},
+    {"sensor_id": "FW-001", "name": "Barpeta Station FW-001", "base_level": 3.17, "warning": 3.0, "danger": 4.0},
 ]
 
 

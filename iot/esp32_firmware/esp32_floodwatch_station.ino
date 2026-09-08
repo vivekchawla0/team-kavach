@@ -29,7 +29,7 @@ const char* WIFI_SSID     = "FloodWatch_FieldNet";
 const char* WIFI_PASS     = "RiverSafety2026";
 const char* SERVER_URL    = "http://192.168.1.100:8000/api/v1/telemetry";
 const char* IOT_API_KEY   = "fw_live_sec_99a8b7c6d5e4";
-const char* SENSOR_ID     = "FW-007"; // Bad Münstereifel Erft Bridge
+const char* SENSOR_ID     = "FW-001"; // Barpeta Station FW-001, Assam
 
 // Physical Gauge Height (Distance from ultrasonic sensor face to riverbed in meters)
 const float RIVERBED_DISTANCE_M = 5.50; 

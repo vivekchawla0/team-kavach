@@ -18,13 +18,13 @@ class WeatherService:
 
         # Fallback default matching dashboard reference image
         return WeatherCurrentResponse(
-            location_name="Bad Münstereifel, Germany",
-            temperature=12.0,
-            humidity=78.0,
-            wind_speed=15.0,
-            rainfall_current=18.0,
-            atmospheric_pressure=1012.0,
-            weather_condition="Light Rain",
+            location_name="Barpeta, Assam, India",
+            temperature=27.0,
+            humidity=85.0,
+            wind_speed=3.9,
+            rainfall_current=65.0,
+            atmospheric_pressure=999.0,
+            weather_condition="Mostly Clear",
             recorded_at=utcnow()
         )
 
