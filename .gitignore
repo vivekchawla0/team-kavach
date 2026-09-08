@@ -13,6 +13,28 @@ dist/
 dist-ssr/
 build/
 
+# Python bytecode & caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+floodwatch.db
+
+# Local PostgreSQL runtime & binaries
+.postgres/
+data/
+pg.log
+
+# Virtual environments
+venv/
+env/
+.venv/
+
 # Local environment and secrets
 .env
 .env.local

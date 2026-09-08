@@ -1,0 +1,296 @@
+{
+  "model_name": "floodwatch_erft_multi_horizon_xgboost",
+  "version": "1.0.0",
+  "features": [
+    "water_level",
+    "water_level_lag1",
+    "water_level_lag2",
+    "water_level_lag3",
+    "water_rise_rate_1h",
+    "water_rise_rate_3h",
+    "rain_1h",
+    "rain_3h_sum",
+    "rain_6h_sum",
+    "rain_12h_sum",
+    "rain_24h_sum",
+    "api_index",
+    "soil_moisture_pct",
+    "temperature_2m",
+    "relative_humidity_2m",
+    "surface_pressure",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos"
+  ],
+  "horizons": [
+    1,
+    3,
+    6
+  ],
+  "metrics": {
+    "1h": {
+      "mae": 0.0029690322750142457,
+      "rmse": 0.018794239140837277,
+      "r2": 0.9950915974168766
+    },
+    "3h": {
+      "mae": 0.007989482672336977,
+      "rmse": 0.030005509405025586,
+      "r2": 0.9874892726481589
+    },
+    "6h": {
+      "mae": 0.01430155161397636,
+      "rmse": 0.040790681230660875,
+      "r2": 0.9768800293400565
+    }
+  },
+  "feature_importances": {
+    "1h": {
+      "water_level": {
+        "importance": 0.5396654605865479,
+        "tier": "High influence"
+      },
+      "water_level_lag1": {
+        "importance": 0.3331783413887024,
+        "tier": "High influence"
+      },
+      "water_level_lag2": {
+        "importance": 0.07124055176973343,
+        "tier": "Moderate influence"
+      },
+      "water_level_lag3": {
+        "importance": 0.014927699230611324,
+        "tier": "Low influence"
+      },
+      "rain_1h": {
+        "importance": 0.009302178397774696,
+        "tier": "Low influence"
+      },
+      "relative_humidity_2m": {
+        "importance": 0.00790065061300993,
+        "tier": "Low influence"
+      },
+      "rain_24h_sum": {
+        "importance": 0.005574406590312719,
+        "tier": "Low influence"
+      },
+      "temperature_2m": {
+        "importance": 0.0028225218411535025,
+        "tier": "Low influence"
+      },
+      "water_rise_rate_3h": {
+        "importance": 0.0023761403281241655,
+        "tier": "Low influence"
+      },
+      "hour_cos": {
+        "importance": 0.002243576105684042,
+        "tier": "Low influence"
+      },
+      "hour_sin": {
+        "importance": 0.0018795040668919683,
+        "tier": "Low influence"
+      },
+      "rain_6h_sum": {
+        "importance": 0.001746742520481348,
+        "tier": "Low influence"
+      },
+      "rain_12h_sum": {
+        "importance": 0.0014540740521624684,
+        "tier": "Low influence"
+      },
+      "soil_moisture_pct": {
+        "importance": 0.0014524301514029503,
+        "tier": "Low influence"
+      },
+      "surface_pressure": {
+        "importance": 0.0011459937086328864,
+        "tier": "Low influence"
+      },
+      "water_rise_rate_1h": {
+        "importance": 0.0010681620333343744,
+        "tier": "Low influence"
+      },
+      "rain_3h_sum": {
+        "importance": 0.0007726926123723388,
+        "tier": "Low influence"
+      },
+      "api_index": {
+        "importance": 0.000547928037121892,
+        "tier": "Low influence"
+      },
+      "month_sin": {
+        "importance": 0.0005379533977247775,
+        "tier": "Low influence"
+      },
+      "month_cos": {
+        "importance": 0.00016296560352202505,
+        "tier": "Low influence"
+      }
+    },
+    "3h": {
+      "water_level": {
+        "importance": 0.4939327538013458,
+        "tier": "High influence"
+      },
+      "water_level_lag1": {
+        "importance": 0.32409003376960754,
+        "tier": "High influence"
+      },
+      "water_level_lag2": {
+        "importance": 0.08937340974807739,
+        "tier": "Moderate influence"
+      },
+      "water_level_lag3": {
+        "importance": 0.027235474437475204,
+        "tier": "Low influence"
+      },
+      "rain_24h_sum": {
+        "importance": 0.022984767332673073,
+        "tier": "Low influence"
+      },
+      "rain_1h": {
+        "importance": 0.008205754682421684,
+        "tier": "Low influence"
+      },
+      "rain_3h_sum": {
+        "importance": 0.004157199524343014,
+        "tier": "Low influence"
+      },
+      "temperature_2m": {
+        "importance": 0.0036342088133096695,
+        "tier": "Low influence"
+      },
+      "surface_pressure": {
+        "importance": 0.0031363985035568476,
+        "tier": "Low influence"
+      },
+      "hour_cos": {
+        "importance": 0.003065424971282482,
+        "tier": "Low influence"
+      },
+      "relative_humidity_2m": {
+        "importance": 0.0030046203173696995,
+        "tier": "Low influence"
+      },
+      "soil_moisture_pct": {
+        "importance": 0.002913400297984481,
+        "tier": "Low influence"
+      },
+      "rain_6h_sum": {
+        "importance": 0.0025632325559854507,
+        "tier": "Low influence"
+      },
+      "hour_sin": {
+        "importance": 0.0022612467873841524,
+        "tier": "Low influence"
+      },
+      "rain_12h_sum": {
+        "importance": 0.0022234017960727215,
+        "tier": "Low influence"
+      },
+      "water_rise_rate_3h": {
+        "importance": 0.002057586098089814,
+        "tier": "Low influence"
+      },
+      "api_index": {
+        "importance": 0.0014414283214136958,
+        "tier": "Low influence"
+      },
+      "water_rise_rate_1h": {
+        "importance": 0.0013562579406425357,
+        "tier": "Low influence"
+      },
+      "month_sin": {
+        "importance": 0.0013459640322253108,
+        "tier": "Low influence"
+      },
+      "month_cos": {
+        "importance": 0.001017359783872962,
+        "tier": "Low influence"
+      }
+    },
+    "6h": {
+      "water_level": {
+        "importance": 0.42678359150886536,
+        "tier": "High influence"
+      },
+      "water_level_lag1": {
+        "importance": 0.3146616816520691,
+        "tier": "High influence"
+      },
+      "water_level_lag2": {
+        "importance": 0.13977086544036865,
+        "tier": "Moderate influence"
+      },
+      "water_level_lag3": {
+        "importance": 0.036756791174411774,
+        "tier": "Low influence"
+      },
+      "rain_24h_sum": {
+        "importance": 0.03366261348128319,
+        "tier": "Low influence"
+      },
+      "surface_pressure": {
+        "importance": 0.006367791444063187,
+        "tier": "Low influence"
+      },
+      "hour_cos": {
+        "importance": 0.004782429430633783,
+        "tier": "Low influence"
+      },
+      "relative_humidity_2m": {
+        "importance": 0.004246738273650408,
+        "tier": "Low influence"
+      },
+      "temperature_2m": {
+        "importance": 0.0037107467651367188,
+        "tier": "Low influence"
+      },
+      "rain_6h_sum": {
+        "importance": 0.0034123421646654606,
+        "tier": "Low influence"
+      },
+      "month_cos": {
+        "importance": 0.0033834611531347036,
+        "tier": "Low influence"
+      },
+      "api_index": {
+        "importance": 0.0032560869585722685,
+        "tier": "Low influence"
+      },
+      "soil_moisture_pct": {
+        "importance": 0.0031041414476931095,
+        "tier": "Low influence"
+      },
+      "hour_sin": {
+        "importance": 0.0030398829840123653,
+        "tier": "Low influence"
+      },
+      "rain_12h_sum": {
+        "importance": 0.0028752039652317762,
+        "tier": "Low influence"
+      },
+      "rain_1h": {
+        "importance": 0.0028418332803994417,
+        "tier": "Low influence"
+      },
+      "month_sin": {
+        "importance": 0.0026911913882941008,
+        "tier": "Low influence"
+      },
+      "water_rise_rate_3h": {
+        "importance": 0.0019831054378300905,
+        "tier": "Low influence"
+      },
+      "rain_3h_sum": {
+        "importance": 0.001518575707450509,
+        "tier": "Low influence"
+      },
+      "water_rise_rate_1h": {
+        "importance": 0.001150967669673264,
+        "tier": "Low influence"
+      }
+    }
+  }
+}
