@@ -7,13 +7,13 @@ import { LiveSensorTable } from '@/components/sensors/LiveSensorTable';
 import { RainfallForecast } from '@/components/weather/RainfallForecast';
 import { EnvironmentalData } from '@/components/weather/EnvironmentalData';
 import { SystemStatus } from '@/components/dashboard/SystemStatus';
-import { SimulatorToolbar } from '@/components/dashboard/SimulatorToolbar';
 import { SensorDetailModal } from '@/components/sensors/SensorDetailModal';
+
 
 export const DashboardPage: React.FC = () => {
   return (
-    <div className="p-6 sm:p-8 flex flex-col gap-6 max-w-[1680px] w-full mx-auto">
-      {/* 5 Top KPI Cards */}
+    <div className="px-6 sm:px-10 lg:px-12 py-6 sm:py-8 flex flex-col gap-6 w-full max-w-[1920px] mx-auto">
+      {/* 4 Top KPI Cards */}
       <MetricCards />
 
       {/* Primary Grid: Map, Trends, Alerts */}
@@ -43,9 +43,9 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Interactive Simulator Toolbar & Detail Modal */}
-      <SimulatorToolbar />
+      {/* Sensor Detail Modal */}
       <SensorDetailModal />
     </div>
   );
 };
+

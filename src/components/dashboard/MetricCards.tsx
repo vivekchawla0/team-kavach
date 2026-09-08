@@ -1,5 +1,5 @@
 import React from 'react';
-import { Waves, Droplets, CloudRain, AlertTriangle, Sprout, ArrowUp, ArrowDown } from 'lucide-react';
+import { Waves, Droplets, CloudRain, AlertTriangle, ArrowUp, ArrowDown } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 
 export const MetricCards: React.FC = () => {
@@ -12,7 +12,6 @@ export const MetricCards: React.FC = () => {
   const rainfall = summary?.current_rainfall_mm_hr ?? 18;
   const riskLevel = summary?.flood_risk_level ?? 'LOW';
   const riskText = summary?.flood_risk_text ?? 'No immediate risk';
-  const soilMoisture = summary?.soil_moisture_percent ?? 92;
 
   const riskBadgeStyles: Record<string, string> = {
     LOW: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -22,7 +21,7 @@ export const MetricCards: React.FC = () => {
   };
 
   return (
-    <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" aria-label="Key Hydrological Metrics">
+    <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5" aria-label="Key Hydrological Metrics">
       {/* 1. Total Sensors */}
       <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow flex items-start gap-3.5">
         <div className="w-11 h-11 rounded-xl bg-sky-100 flex items-center justify-center shrink-0 text-sky-700">
@@ -107,25 +106,6 @@ export const MetricCards: React.FC = () => {
           </div>
           <span className="text-[11.5px] text-slate-500 font-medium mt-1 truncate">
             {riskText}
-          </span>
-        </div>
-      </div>
-
-      {/* 5. Soil Moisture */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-shadow flex items-start gap-3.5">
-        <div className="w-11 h-11 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0 text-emerald-700">
-          <Sprout className="w-5 h-5 text-emerald-600" />
-        </div>
-        <div className="flex flex-col flex-1 min-w-0">
-          <span className="text-xs font-semibold text-slate-500">Soil Moisture</span>
-          <div className="flex items-baseline gap-2 mt-0.5">
-            <span className="text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              {Math.round(soilMoisture)}%
-            </span>
-          </div>
-          <span className="text-[11.5px] font-medium text-rose-600 flex items-center gap-1 mt-1">
-            <ArrowUp className="w-3 h-3 text-rose-600" />
-            <span>6%</span> vs. yesterday
           </span>
         </div>
       </div>

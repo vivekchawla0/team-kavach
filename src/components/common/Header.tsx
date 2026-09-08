@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Search, Bell, ChevronDown, CloudRain } from 'lucide-react';
+import { Search, Bell, ChevronDown, CloudRain } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 
 export const Header: React.FC = () => {
@@ -26,7 +26,7 @@ export const Header: React.FC = () => {
   }, []);
 
   return (
-    <header className="relative min-h-[240px] px-8 py-6 flex flex-col justify-between overflow-hidden text-white">
+    <header className="relative min-h-[240px] px-6 sm:px-10 lg:px-12 py-6 flex flex-col justify-between overflow-hidden text-white">
       {/* Background Image & Gradient Overlay */}
       <div
         className="absolute inset-0 bg-cover bg-[center_38%] scale-[1.02] brightness-90 z-0"
@@ -35,11 +35,31 @@ export const Header: React.FC = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950/60 via-slate-900/75 to-slate-900/90 z-0" />
 
       {/* Top Utility Bar */}
-      <div className="relative z-10 flex items-center justify-between">
-        {/* Location Breadcrumb */}
-        <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 text-xs font-semibold tracking-wide">
-          <MapPin className="w-3.5 h-3.5 text-sky-400" />
-          <span>Bad Münstereifel, Germany</span>
+      <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
+        {/* Project Branding: JAL SUCHAK */}
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-cyan-400 to-teal-400 p-[1.5px] shadow-lg shadow-sky-500/20 flex items-center justify-center shrink-0">
+            <div className="w-full h-full bg-slate-950/75 backdrop-blur-sm rounded-[10px] flex items-center justify-center">
+              <svg className="w-6 h-5" viewBox="0 0 36 28" fill="none">
+                <path d="M2 14C6 8 10 8 14 14C18 20 22 20 26 14C30 8 34 8 34 8" stroke="#38bdf8" strokeWidth="3" strokeLinecap="round" />
+                <path d="M2 20C6 14 10 14 14 20C18 26 22 26 26 20C30 14 34 14 34 14" stroke="#7dd3fc" strokeWidth="3" strokeLinecap="round" />
+                <path d="M2 8C6 2 10 2 14 8C18 14 22 14 26 8C30 2 34 2 34 2" stroke="#0284c7" strokeWidth="3" strokeLinecap="round" />
+              </svg>
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2.5">
+              <span className="font-extrabold text-xl tracking-wider text-white uppercase drop-shadow">
+                JAL SUCHAK
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/25 text-sky-300 border border-sky-400/35 tracking-widest uppercase">
+                Early Warning System
+              </span>
+            </div>
+            <span className="text-[10.5px] font-medium text-slate-300 tracking-wide">
+              जल सूचक • Real-Time River Telemetry & Flood Early Warning Platform
+            </span>
+          </div>
         </div>
 
         {/* Search, Notifications & User */}
