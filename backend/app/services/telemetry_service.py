@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional, Tuple, List
 from sqlalchemy.orm import Session
 from app.models.models import Sensor, SensorReading, FloodRiskAssessment
@@ -312,7 +312,20 @@ class TelemetryService:
         db.commit()
         db.refresh(reading)
 
-        # 4. Broadcast live WebSocket event
+        # 4. Generate ML Multi-Horizon Prediction for real ESP32 observation
+        ml_data = {}
+        try:
+            ml_data = ml_predictor.predict_and_store(
+                db=db,
+                sensor_id=sensor.sensor_id,
+                current_reading=reading,
+                warning_threshold=sensor.warning_threshold,
+                danger_threshold=sensor.danger_threshold,
+            )
+        except Exception as e:
+            logger.warning(f"ML prediction error during real ESP32 processing: {e}")
+
+        # 5. Broadcast live WebSocket event
         alerts_payload = [
             {
                 "id": a.id,
@@ -327,7 +340,14 @@ class TelemetryService:
         ]
 
         ws_payload = {
+            "type": "ESP32_TELEMETRY",
             "event": "telemetry_update",
+            "device_id": "FW-001",
+            "timestamp": reading.timestamp.isoformat(),
+            "water_raw": water_raw,
+            "water_level_cm": water_cm,
+            "rain_raw": rain_raw,
+            "rain_intensity": rain_intensity,
             "source": "ESP32_BLE",
             "sensor": {
                 "sensor_id": sensor.sensor_id,
@@ -356,10 +376,17 @@ class TelemetryService:
                 "level": calibrated["flood_risk_level"],
                 "text": calibrated["flood_risk_text"],
             },
+            "ml": ml_data,
         }
 
         try:
             await ws_manager.broadcast(ws_payload)
+            print("\n[TELEMETRY] Received ESP32 packet")
+            print(f"[TELEMETRY] Water: {water_cm:.2f} cm")
+            print(f"[TELEMETRY] Rain: {rain_intensity:.1f}/10")
+            print("[TELEMETRY] Database saved")
+            print("[TELEMETRY] WebSocket broadcast\n")
+            logger.info(f"[ESP32 BLE] Packet processed: Water Raw {water_raw} -> {water_cm:.2f} cm, Rain Raw {rain_raw} -> {rain_intensity:.1f}/10")
         except Exception as e:
             logger.warning(f"Failed to broadcast real ESP32 WebSocket payload: {e}")
 

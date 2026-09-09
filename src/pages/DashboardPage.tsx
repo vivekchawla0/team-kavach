@@ -8,6 +8,7 @@ import { RecentAlerts } from '@/components/alerts/RecentAlerts';
 import { BlynkStatusCard } from '@/components/dashboard/BlynkStatusCard';
 import { SensorDetailModal } from '@/components/sensors/SensorDetailModal';
 import { ESP32DebugPanel } from '@/components/dashboard/ESP32DebugPanel';
+import { AIFloodPredictionCard } from '@/components/dashboard/AIFloodPredictionCard';
 import { ShieldCheck } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 
@@ -47,12 +48,17 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. Full-Width Real-Data Alert Center matching reference */}
+      {/* 4. Dedicated AI Flood Prediction Card (XGBoost Multi-Horizon Forecast) */}
+      <div className="w-full">
+        <AIFloodPredictionCard />
+      </div>
+
+      {/* 5. Full-Width Real-Data Alert Center matching reference */}
       <div className="w-full">
         <RecentAlerts />
       </div>
 
-      {/* 5. Collapsible ESP32 Physical Prototype Live Diagnostics Panel */}
+      {/* 6. Collapsible ESP32 Physical Prototype Live Diagnostics Panel */}
       <div className="w-full">
         <ESP32DebugPanel />
       </div>

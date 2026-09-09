@@ -14,10 +14,17 @@ import { useDashboard } from '@/context/DashboardContext';
 import { weatherService, CurrentWeatherData } from '@/services/weatherService';
 
 export const Header: React.FC = () => {
-  const { summary, realTelemetry } = useDashboard();
+  const { summary, realTelemetry, isTelemetryLive, telemetryAgeSeconds } = useDashboard();
   const [liveWeather, setLiveWeather] = useState<CurrentWeatherData | null>(null);
   const [timeStr, setTimeStr] = useState('04:06 AM');
   const [dateStr, setDateStr] = useState('Wed, 9 Sep 2026');
+
+  const formatAge = (seconds: number) => {
+    if (seconds < 60) return `${seconds}s`;
+    const m = Math.floor(seconds / 60);
+    const rem = seconds % 60;
+    return `${m}m ${rem}s`;
+  };
 
   const waterLevel = summary?.average_water_level_m ?? 3.17;
   const rainfall = summary?.current_rainfall_mm_hr ?? 65;
@@ -187,24 +194,29 @@ export const Header: React.FC = () => {
             {/* Top Row: Title & Online Badge */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <Radio className={`w-4 h-4 ${realTelemetry?.bluetooth_status === 'ONLINE' ? 'text-sky-600 animate-pulse' : 'text-slate-400'}`} />
+                <Radio className={`w-4 h-4 ${isTelemetryLive ? 'text-sky-600 animate-pulse' : 'text-slate-400'}`} />
                 <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-800">
                   LIVE TELEMETRY
                 </span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-slate-400 font-semibold">ESP32 • Bluetooth</span>
-                {realTelemetry?.bluetooth_status === 'ONLINE' ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                    ONLINE
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-bold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                    {realTelemetry?.seconds_ago ? `OFFLINE (${Math.round(realTelemetry.seconds_ago)}s)` : 'OFFLINE'}
-                  </span>
-                )}
+              <div className="flex flex-col items-end">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-slate-400 font-semibold">ESP32 • Bluetooth</span>
+                  {isTelemetryLive ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                      ONLINE
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-bold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                      OFFLINE ({formatAge(telemetryAgeSeconds)})
+                    </span>
+                  )}
+                </div>
+                <span className="text-[9.5px] text-slate-400 font-medium mt-0.5">
+                  {isTelemetryLive ? 'Last updated: just now' : `Last seen: ${formatAge(telemetryAgeSeconds)} ago`}
+                </span>
               </div>
             </div>
 
@@ -242,11 +254,14 @@ export const Header: React.FC = () => {
                   <Droplets className="w-3 h-3 text-sky-500" />
                   <span>Water Level</span>
                 </div>
-                <span className="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5">
+                <span className={`text-sm sm:text-base font-extrabold mt-0.5 ${isTelemetryLive ? 'text-slate-900' : 'text-slate-500'}`}>
                   {realTelemetry?.water_level_cm !== null && realTelemetry?.water_level_cm !== undefined
                     ? `${realTelemetry.water_level_cm.toFixed(2)} cm`
-                    : 'OFFLINE'}
+                    : '--'}
                 </span>
+                {!isTelemetryLive && (
+                  <span className="text-[9px] text-slate-400 font-medium -mt-0.5">Last Known</span>
+                )}
               </div>
 
               {/* Rain Intensity */}
@@ -255,11 +270,14 @@ export const Header: React.FC = () => {
                   <CloudRain className="w-3 h-3 text-sky-500" />
                   <span>Rain Intensity</span>
                 </div>
-                <span className="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5">
+                <span className={`text-sm sm:text-base font-extrabold mt-0.5 ${isTelemetryLive ? 'text-slate-900' : 'text-slate-500'}`}>
                   {realTelemetry?.rain_intensity !== null && realTelemetry?.rain_intensity !== undefined
                     ? `${realTelemetry.rain_intensity.toFixed(1)} / 10`
                     : '--'}
                 </span>
+                {!isTelemetryLive && (
+                  <span className="text-[9px] text-slate-400 font-medium -mt-0.5">Last Known</span>
+                )}
               </div>
 
               {/* Temperature */}

@@ -12,6 +12,7 @@ import {
   BlynkTestResponse,
   BlynkAlertResponse,
   RealTelemetry,
+  MLPredictionResponse,
 } from '@/types';
 
 const API_BASE = window.location.origin.includes(':8000')
@@ -95,6 +96,11 @@ export const api = {
   getMLForecast: async (sensorId: string): Promise<MLSensorForecastResponse> => {
     const res = await fetch(`${API_BASE}/ml/forecast/${sensorId}`);
     return handleResponse<MLSensorForecastResponse>(res);
+  },
+
+  getMLPrediction: async (sensorId: string = 'ESP32-FW-001'): Promise<MLPredictionResponse> => {
+    const res = await fetch(`${API_BASE}/ml/prediction?sensor_id=${encodeURIComponent(sensorId)}`);
+    return handleResponse<MLPredictionResponse>(res);
   },
 
   getMLModels: async (): Promise<any> => {

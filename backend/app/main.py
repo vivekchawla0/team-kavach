@@ -18,15 +18,19 @@ logger = logging.getLogger("floodwatch")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Initializing FloodWatch Monitoring & Warning System...")
+    logger.info("Initializing JAL SUCHAK Monitoring & Warning System...")
     # Verify tables and seed if necessary
     try:
         seed_database()
         logger.info("Database verified and ready.")
     except Exception as e:
         logger.warning(f"Database startup check note: {e}")
+
+    # No automatic BLE startup: manual CMD ble_test.py serves as the single source of truth
+    logger.info("BLE Collector: Manual mode active (data received via ble_test.py bridge)")
+
     yield
-    logger.info("FloodWatch system shutting down.")
+    logger.info("JAL SUCHAK system shutting down.")
 
 
 app = FastAPI(

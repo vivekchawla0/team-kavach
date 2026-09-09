@@ -31,9 +31,11 @@ export const WaterLevelTrends: React.FC = () => {
     setTrendRange,
     realTelemetry,
     telemetryHistory,
+    isTelemetryLive,
+    telemetryAgeSeconds,
   } = useDashboard();
 
-  const isOnline = realTelemetry?.bluetooth_status === 'ONLINE';
+  const isOnline = isTelemetryLive;
   const currentCm = realTelemetry?.water_level_cm;
   const currentRaw = realTelemetry?.water_raw;
   const riseRate = realTelemetry?.rise_rate_cm_min ?? 0.0;
@@ -237,12 +239,12 @@ export const WaterLevelTrends: React.FC = () => {
             <span>CALIBRATED DEPTH</span>
           </div>
           <div className="my-1">
-            <span className="text-xl sm:text-2xl font-extrabold text-slate-900 leading-tight">
-              {currentCm !== null && currentCm !== undefined ? `${currentCm.toFixed(2)} cm` : 'OFFLINE'}
+            <span className={`text-xl sm:text-2xl font-extrabold leading-tight ${isOnline ? 'text-slate-900' : 'text-slate-500'}`}>
+              {currentCm !== null && currentCm !== undefined ? `${currentCm.toFixed(2)} cm` : '--'}
             </span>
           </div>
           <div className="text-[11px] font-semibold text-slate-500">
-            <span>Raw ADC: {currentRaw ?? '--'}</span>
+            <span>{isOnline ? `Raw ADC: ${currentRaw ?? '--'} • Live ESP32` : `Last Known (Raw ADC: ${currentRaw ?? '--'})`}</span>
           </div>
         </div>
 

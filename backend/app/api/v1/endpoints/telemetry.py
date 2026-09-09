@@ -1,5 +1,5 @@
 from typing import List, Any
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -29,10 +29,35 @@ async def check_telemetry_auth(x_api_key: str = Header(None)) -> str:
 @router.post("", response_model=Any)
 @router.post("/", response_model=Any)
 async def ingest_sensor_reading(
-    reading_in: SensorReadingCreate,
-    api_key: str = Depends(check_telemetry_auth),
+    request: Request,
     db: Session = Depends(get_db)
 ):
+    """
+    Ingestion endpoint for JAL SUCHAK telemetry.
+    Supports direct real ESP32 packets from manual CMD ble_test.py bridge as well as API-key authenticated IoT devices.
+    """
+    body = await request.json()
+    # Check if this is real ESP32 telemetry from ble_test.py
+    if "water_raw" in body or "water_level_raw" in body or "rain_raw" in body:
+        reading, calibrated, alerts = await telemetry_service.process_real_esp32_telemetry(db=db, raw_data=body)
+        return {
+            "status": "success",
+            "device_id": "ESP32-FW-001",
+            "reading_id": reading.id,
+            "calibrated": calibrated,
+            "alerts_triggered": len(alerts),
+            "alerts": alerts
+        }
+
+    # Standard IoT authenticated schema
+    api_key = request.headers.get("x-api-key")
+    if not api_key or (api_key != settings.IOT_API_KEY):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid IoT API Key."
+        )
+
+    reading_in = SensorReadingCreate(**body)
     reading, triggered_alerts = await telemetry_service.process_telemetry(db=db, data=reading_in)
     return {
         "status": "success",
@@ -115,6 +140,51 @@ async def get_latest_esp32_telemetry(db: Session = Depends(get_db)):
             live_state["message"] = "ESP32 OFFLINE — Historical baseline loaded"
 
     return live_state
+
+
+@router.get("/status", response_model=Any)
+async def get_telemetry_status(db: Session = Depends(get_db)):
+    """
+    Returns verified ESP32 BLE connection status and latency (Section 16 requirement).
+    """
+    from app.services.ble_collector import ble_collector
+    from app.models.models import SensorReading
+    from datetime import datetime, timezone
+
+    live_state = ble_collector.get_latest_telemetry_payload()
+    is_live = live_state.get("bluetooth_status") == "ONLINE"
+    sec_ago = live_state.get("seconds_ago")
+
+    # If in-memory state is empty or server restarted, check latest DB reading
+    if sec_ago is None or live_state.get("water_raw") is None:
+        last_reading = (
+            db.query(SensorReading)
+            .filter(SensorReading.sensor_id == "FW-001", SensorReading.water_raw.isnot(None))
+            .order_by(SensorReading.timestamp.desc())
+            .first()
+        )
+        if last_reading and last_reading.timestamp:
+            now = datetime.now(timezone.utc)
+            r_time = last_reading.timestamp if last_reading.timestamp.tzinfo else last_reading.timestamp.replace(tzinfo=timezone.utc)
+            sec_ago = round((now - r_time).total_seconds(), 1)
+            live_state["water_raw"] = last_reading.water_raw
+            live_state["water_level_cm"] = last_reading.water_level_cm
+            live_state["rain_raw"] = last_reading.rain_raw
+            live_state["rain_intensity"] = last_reading.rain_intensity
+            live_state["timestamp"] = last_reading.timestamp.isoformat()
+            is_live = sec_ago <= 15.0
+
+    return {
+        "esp32_connected": is_live,
+        "bluetooth_connected": is_live,
+        "last_packet_timestamp": live_state.get("timestamp"),
+        "age_seconds": round(sec_ago, 1) if sec_ago is not None else None,
+        "water_raw": live_state.get("water_raw"),
+        "water_level_cm": live_state.get("water_level_cm"),
+        "rain_raw": live_state.get("rain_raw"),
+        "rain_intensity": live_state.get("rain_intensity"),
+        "status": "ONLINE" if is_live else "OFFLINE"
+    }
 
 
 @router.get("/history", response_model=Any)

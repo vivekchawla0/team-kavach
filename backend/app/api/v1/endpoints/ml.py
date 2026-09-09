@@ -10,6 +10,18 @@ from app.services.ml.predictor import ml_predictor
 router = APIRouter()
 
 
+@router.get("/prediction")
+def get_real_ml_prediction(
+    sensor_id: Optional[str] = "ESP32-FW-001",
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """
+    Returns real-time XGBoost Multi-Horizon Flood Prediction (+1h, +3h, +6h)
+    using the physical prototype calibration and live ESP32 BLE telemetry.
+    """
+    return ml_predictor.get_latest_prediction(db=db, sensor_id=sensor_id)
+
+
 @router.get("/forecast/{sensor_id}")
 def get_sensor_ml_forecast(sensor_id: str, db: Session = Depends(get_db)) -> Dict[str, Any]:
     """
@@ -18,6 +30,10 @@ def get_sensor_ml_forecast(sensor_id: str, db: Session = Depends(get_db)) -> Dic
     statistically calibrated flood probability, and feature influence breakdown.
     """
     sensor = db.query(Sensor).filter(Sensor.sensor_id == sensor_id).first()
+    if not sensor:
+        sensor = db.query(Sensor).filter(Sensor.sensor_id == "FW-001").first()
+    if not sensor:
+        sensor = db.query(Sensor).first()
     if not sensor:
         raise HTTPException(status_code=404, detail=f"Sensor '{sensor_id}' not found")
 

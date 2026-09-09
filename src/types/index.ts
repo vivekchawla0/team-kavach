@@ -250,4 +250,33 @@ export interface BlynkAlertResponse {
   alert_active?: boolean;
 }
 
+export interface PredictionHorizon {
+  water_cm: number;
+  flood_probability: number;
+  risk: 'SAFE' | 'WARNING' | 'DANGER' | 'CRITICAL';
+}
+
+export interface MLPredictionResponse {
+  available: boolean;
+  message?: string;
+  current_water_cm?: number;
+  water_rise_cm_min?: number;
+  rain_intensity?: number;
+  prediction?: {
+    one_hour: PredictionHorizon;
+    three_hours: PredictionHorizon;
+    six_hours: PredictionHorizon;
+  };
+  features?: Record<string, number>;
+  seconds_ago?: number;
+  model?: {
+    type: string;
+    status: string;
+    framework?: string;
+    horizons?: string[];
+    project?: string;
+    location?: string;
+  };
+}
+
 

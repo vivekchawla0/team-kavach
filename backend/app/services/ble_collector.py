@@ -108,6 +108,18 @@ class BLECollector:
 
         return calibrated
 
+    async def _async_handle_notification(self, payload: Dict[str, Any]):
+        """Persists direct BLE notification to database and broadcasts WebSocket."""
+        from app.core.database import SessionLocal
+        from app.services.telemetry_service import telemetry_service
+        db = SessionLocal()
+        try:
+            await telemetry_service.process_real_esp32_telemetry(db=db, raw_data=payload)
+        except Exception as e:
+            logger.warning(f"Error persisting direct BLE telemetry: {e}")
+        finally:
+            db.close()
+
     def notification_handler(self, sender: Any, data: bytearray):
         """
         Direct Bleak notification handler matching ble_test.py logic.
@@ -115,7 +127,11 @@ class BLECollector:
         try:
             text = data.decode()
             payload = json.loads(text)
-            self.ingest_payload(payload)
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(self._async_handle_notification(payload))
+            except RuntimeError:
+                self.ingest_payload(payload)
         except Exception as e:
             logger.warning(f"BLE notification parse error: {e}")
 

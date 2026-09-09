@@ -31,6 +31,9 @@ interface DashboardContextType {
   isLoading: boolean;
   realTelemetry: RealTelemetry | null;
   telemetryHistory: any[];
+  isTelemetryLive: boolean;
+  telemetryAgeSeconds: number;
+  lastTelemetryTimestamp: string | null;
   setMapFilter: (filter: string) => void;
   setTableSearch: (term: string) => void;
   setTableStatus: (status: string) => void;
@@ -56,6 +59,31 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [weatherForecast, setWeatherForecast] = useState<WeatherForecastSummary | null>(null);
   const [realTelemetry, setRealTelemetry] = useState<RealTelemetry | null>(null);
   const [telemetryHistory, setTelemetryHistory] = useState<any[]>([]);
+  const [telemetryAgeSeconds, setTelemetryAgeSeconds] = useState<number>(999);
+
+  // Sync age whenever new telemetry arrives
+  useEffect(() => {
+    if (realTelemetry?.seconds_ago !== undefined && realTelemetry?.seconds_ago !== null) {
+      setTelemetryAgeSeconds(Math.round(realTelemetry.seconds_ago));
+    }
+  }, [realTelemetry]);
+
+  // 1-second real-time ticker
+  useEffect(() => {
+    const ticker = setInterval(() => {
+      setTelemetryAgeSeconds((prev) => (prev < 99999 ? prev + 1 : prev));
+    }, 1000);
+    return () => clearInterval(ticker);
+  }, []);
+
+  // Centralized telemetry freshness rule: <= 15s is LIVE, > 15s is OFFLINE / STALE
+  const isTelemetryLive = Boolean(
+    realTelemetry &&
+    realTelemetry.bluetooth_status === 'ONLINE' &&
+    telemetryAgeSeconds <= 15
+  );
+
+  const lastTelemetryTimestamp = realTelemetry?.timestamp ?? null;
 
   const [mapFilter, setMapFilter] = useState<string>('ALL');
   const [tableSearch, setTableSearch] = useState<string>('');
@@ -132,13 +160,43 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // WebSocket subscription for zero-refresh real-time updates
   useEffect(() => {
-    const handleWs = (evt: WebSocketTelemetryEvent) => {
-      // Ingest live real ESP32 telemetry
-      if (evt.real_telemetry) {
-        setRealTelemetry(evt.real_telemetry);
+    const handleWs = (evt: any) => {
+      const isEsp32 = evt.type === 'ESP32_TELEMETRY' || evt.event === 'telemetry_update' || evt.real_telemetry;
+      if (isEsp32) {
+        const waterCm = evt.water_level_cm ?? evt.real_telemetry?.water_level_cm ?? evt.sensor?.water_level;
+        const rainInt = evt.rain_intensity ?? evt.real_telemetry?.rain_intensity;
+        console.log('[WS] ESP32_TELEMETRY received');
+        if (waterCm !== undefined) console.log(`[WS] Water: ${Number(waterCm).toFixed(2)} cm`);
+        if (rainInt !== undefined) console.log(`[WS] Rain: ${Number(rainInt).toFixed(1)}/10`);
+
+        // Immediately reset elapsed age ticker
+        setTelemetryAgeSeconds(0);
+
+        // Ingest live real ESP32 telemetry
+        if (evt.real_telemetry) {
+          setRealTelemetry(evt.real_telemetry);
+        } else if (evt.water_level_cm !== undefined) {
+          setRealTelemetry((prev: any) => ({
+            ...prev,
+            device_id: evt.device_id || 'FW-001',
+            water_raw: evt.water_raw,
+            water_level_cm: evt.water_level_cm,
+            rain_raw: evt.rain_raw,
+            rain_intensity: evt.rain_intensity,
+            bluetooth_status: 'ONLINE',
+            calibration_status: 'CALIBRATED',
+            seconds_ago: 0,
+            timestamp: evt.timestamp || new Date().toISOString(),
+          }));
+        }
+
+        // Add reading to history
+        if (evt.reading) {
+          setTelemetryHistory((prev) => [evt.reading, ...prev.slice(0, 49)]);
+        }
       }
 
-      if (evt.event === 'telemetry_update' && evt.sensor) {
+      if (evt.sensor) {
         setSensors((prev) =>
           prev.map((s) =>
             s.sensor_id === evt.sensor!.sensor_id
@@ -165,7 +223,17 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
 
         // Update dashboard summary metrics softly
-        api.getDashboardSummary().then(setSummary).catch(() => {});
+        setSummary((prev) =>
+          prev
+            ? {
+                ...prev,
+                average_water_level_m: evt.sensor.water_level,
+                current_rainfall_mm_hr: evt.reading?.rainfall ?? prev.current_rainfall_mm_hr,
+                online_sensors: 1,
+                offline_sensors: 0,
+              }
+            : prev
+        );
       } else if (evt.event === 'scenario_changed') {
         refreshDashboard();
       }
@@ -218,6 +286,9 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         isLoading,
         realTelemetry,
         telemetryHistory,
+        isTelemetryLive,
+        telemetryAgeSeconds,
+        lastTelemetryTimestamp,
         setMapFilter,
         setTableSearch,
         setTableStatus,
