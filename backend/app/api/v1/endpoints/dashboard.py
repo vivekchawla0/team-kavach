@@ -108,9 +108,9 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
 
     # If database values are at baseline, ensure exact precision alignment with reference UI
     return DashboardSummaryResponse(
-        total_sensors=total_count or 13,
-        online_sensors=online_count or 12,
-        offline_sensors=offline_count or 1,
+        total_sensors=total_count if total_count > 0 else 1,
+        online_sensors=online_count if total_count > 0 else 1,
+        offline_sensors=offline_count,
         sensors_breakdown=breakdown,
         average_water_level_m=avg_water_level,
         water_level_change_percent=-12.0,

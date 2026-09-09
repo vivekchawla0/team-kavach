@@ -28,21 +28,31 @@ def seed_database():
     db = SessionLocal()
 
     try:
-        # Check if already seeded
-        existing_count = db.query(Sensor).count()
-        if existing_count >= 13:
-            print(f"Database already contains {existing_count} sensors. Re-verifying baseline...")
+        # Check if already seeded with only the 1 Barpeta prototype station
+        existing_sensors = db.query(Sensor).all()
+        if len(existing_sensors) == 1 and existing_sensors[0].sensor_id == "FW-001":
+            print("Database already contains Barpeta Station FW-001. Skipping re-seed.")
             return
 
-        print("Seeding FLOODWATCH database with 13 Bad Münstereifel river sensors and realistic telemetry...")
+        # If legacy sensors or multiple sensors exist, clean them up to ensure single prototype station
+        if existing_sensors:
+            print("Resetting legacy sensors to single Barpeta Station FW-001...")
+            db.query(SensorReading).delete()
+            db.query(SensorStatusHistory).delete()
+            db.query(Alert).delete()
+            db.query(AlertHistory).delete()
+            db.query(Sensor).delete()
+            db.commit()
+
+        print("Seeding JAL SUCHAK database with Barpeta Station FW-001 and realistic telemetry...")
 
         # 1. Admin User
-        admin_user = db.query(User).filter(User.email == "admin@floodwatch.gov.de").first()
+        admin_user = db.query(User).filter(User.email == "admin@jalsuchak.gov.in").first()
         if not admin_user:
             admin_user = User(
-                email="admin@floodwatch.gov.de",
-                hashed_password=get_password_hash("Admin@FloodWatch2026"),
-                full_name="Vivek Chawla",
+                email="admin@jalsuchak.gov.in",
+                hashed_password=get_password_hash("Admin@JalSuchak2026"),
+                full_name="Disaster Management Cell",
                 role="ADMIN",
                 is_active=True,
                 created_at=utcnow(),
@@ -150,25 +160,25 @@ def seed_database():
         db.bulk_save_objects(readings)
         db.commit()
 
-        # 4. Alerts matching the reference dashboard
-        print("Seeding alerts matching reference UI...")
+        # 4. Alerts matching JAL SUCHAK monitoring system
+        print("Seeding alerts matching JAL SUCHAK monitoring system...")
         alerts_data = [
             {
-                "sensor_id": "FW-007",
+                "sensor_id": "FW-001",
                 "type": "HIGH_WATER_LEVEL",
                 "severity": "CRITICAL",
-                "title": "High water level at Sensor 7",
-                "message": "Water level reached 3.21m (danger threshold 3.2m exceeded)",
+                "title": "Warning water level exceeded",
+                "message": "Water level reached 3.17m (threshold 3.00m exceeded at Barpeta Station FW-001)",
                 "status": "ACTIVE",
                 "is_read": False,
                 "created_at": now - timedelta(minutes=2),
             },
             {
-                "sensor_id": "FW-004",
+                "sensor_id": "FW-001",
                 "type": "RAPID_WATER_RISE",
                 "severity": "WARNING",
-                "title": "Rapid rise detected (Sensor 4)",
-                "message": "Water level increased by 0.8m over last 2 hours",
+                "title": "Rapid rise detected (Barpeta Station FW-001)",
+                "message": "Water level rising at rate of +0.24 m/hr in Chaulkhowa river basin",
                 "status": "ACTIVE",
                 "is_read": False,
                 "created_at": now - timedelta(minutes=18),
@@ -177,23 +187,23 @@ def seed_database():
                 "sensor_id": None,
                 "type": "HEAVY_RAINFALL",
                 "severity": "INFO",
-                "title": "Heavy rainfall expected",
-                "message": "80 mm in next 3 hours (DWD German Weather Service)",
+                "title": "Heavy rainfall alert",
+                "message": "Heavy monsoon precipitation forecast in Barpeta catchment",
                 "status": "ACTIVE",
                 "is_read": True,
                 "created_at": now - timedelta(hours=1),
             },
             {
-                "sensor_id": "FW-012",
+                "sensor_id": "FW-001",
                 "type": "SENSOR_RECOVERY",
                 "severity": "RESOLVED",
-                "title": "Sensor 12 back online",
-                "message": "Telemetry link restored after maintenance",
+                "title": "Blynk cloud telemetry connected",
+                "message": "ESP32 hardware telemetry stream authenticated via Blynk Cloud",
                 "status": "RESOLVED",
                 "is_read": True,
                 "created_at": now - timedelta(hours=2),
                 "resolved_at": now - timedelta(hours=1, minutes=55),
-                "resolved_by": "Operator Schmidt",
+                "resolved_by": "JAL SUCHAK System",
             },
             {
                 "sensor_id": None,
@@ -302,8 +312,13 @@ def seed_database():
             ("EMAIL_ALERTS_ENABLED", "true", "NOTIFICATIONS", "Send email summaries on WARNING and CRITICAL"),
         ]
         for k, v, cat, desc in settings_defaults:
-            setting = SystemSetting(key=k, value=v, category=cat, description=desc, updated_at=now)
-            db.add(setting)
+            existing_s = db.query(SystemSetting).filter(SystemSetting.key == k).first()
+            if not existing_s:
+                setting = SystemSetting(key=k, value=v, category=cat, description=desc, updated_at=now)
+                db.add(setting)
+            else:
+                existing_s.value = v
+                existing_s.updated_at = now
 
         # 8. Initial Report
         report = Report(
