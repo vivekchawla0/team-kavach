@@ -68,6 +68,26 @@ export interface DashboardSummary {
   ml_advisory_level?: string;
   ml_forecast_6h_m?: number;
   ml_confidence_corridor?: string;
+  real_telemetry?: RealTelemetry;
+}
+
+export interface RealTelemetry {
+  device_id: string;
+  timestamp: string | null;
+  water_raw: number | null;
+  water_percentage: number | null;
+  water_level_cm: number | null;
+  rain_raw: number | null;
+  rain_percentage: number | null;
+  rain_intensity: number | null;
+  rise_rate_cm_min?: number;
+  flood_risk_level?: string;
+  flood_risk_text?: string;
+  flood_risk_score?: number;
+  bluetooth_status: 'ONLINE' | 'OFFLINE' | 'STALE';
+  calibration_status: string;
+  seconds_ago?: number | null;
+  message?: string;
 }
 
 export interface Alert {
@@ -188,6 +208,7 @@ export interface WebSocketTelemetryEvent {
     soil_moisture: number;
     timestamp: string;
   };
+  real_telemetry?: RealTelemetry;
   alerts?: Alert[];
   risk?: {
     score: number;

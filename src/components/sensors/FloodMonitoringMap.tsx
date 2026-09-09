@@ -6,15 +6,16 @@ import { BARPETA_LOCATION } from '@/config/location';
 import { useDashboard } from '@/context/DashboardContext';
 
 export const FloodMonitoringMap: React.FC = () => {
-  const { summary, setSelectedDetailSensor, sensors } = useDashboard();
+  const { summary, setSelectedDetailSensor, sensors, realTelemetry } = useDashboard();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
 
   const [isStationModalOpen, setIsStationModalOpen] = useState<boolean>(true);
 
-  const waterLevel = summary?.average_water_level_m ?? 3.17;
-  const rainfall = summary?.current_rainfall_mm_hr ?? 65;
-  const riskStatus = summary?.flood_risk_level || 'CRITICAL';
+  const isOnline = realTelemetry?.bluetooth_status === 'ONLINE';
+  const waterLevelCm = realTelemetry?.water_level_cm;
+  const rainIntensity = realTelemetry?.rain_intensity;
+  const riskStatus: string = (realTelemetry?.flood_risk_level as string) || (isOnline ? 'SAFE' : 'OFFLINE');
 
   // Primary prototype sensor coordinates at Barpeta, Assam
   const sensorLat = BARPETA_LOCATION.latitude;
@@ -202,11 +203,15 @@ export const FloodMonitoringMap: React.FC = () => {
             <div className="flex flex-col divide-y divide-slate-100 text-xs">
               <div className="flex items-center justify-between py-1.5">
                 <span className="text-slate-500 font-medium">Water Level</span>
-                <span className="font-extrabold text-slate-900">{waterLevel.toFixed(2)} m</span>
+                <span className="font-extrabold text-slate-900">
+                  {waterLevelCm !== null && waterLevelCm !== undefined ? `${waterLevelCm.toFixed(2)} cm` : 'OFFLINE'}
+                </span>
               </div>
               <div className="flex items-center justify-between py-1.5">
-                <span className="text-slate-500 font-medium">Rainfall</span>
-                <span className="font-extrabold text-slate-900">{Math.round(rainfall)} mm/hr</span>
+                <span className="text-slate-500 font-medium">Rain Intensity</span>
+                <span className="font-extrabold text-slate-900">
+                  {rainIntensity !== null && rainIntensity !== undefined ? `${rainIntensity.toFixed(1)} / 10` : '--'}
+                </span>
               </div>
               <div className="flex items-center justify-between py-1.5">
                 <span className="text-slate-500 font-medium">Battery</span>
@@ -214,7 +219,12 @@ export const FloodMonitoringMap: React.FC = () => {
               </div>
               <div className="flex items-center justify-between py-1.5">
                 <span className="text-slate-500 font-medium">Status</span>
-                <span className="font-bold text-rose-600 flex items-center gap-1">
+                <span className={`font-bold flex items-center gap-1 ${
+                  riskStatus === 'CRITICAL' ? 'text-rose-600' :
+                  riskStatus === 'DANGER' ? 'text-orange-600' :
+                  riskStatus === 'WARNING' ? 'text-amber-600' :
+                  riskStatus === 'SAFE' ? 'text-emerald-600' : 'text-slate-500'
+                }`}>
                   <span>◆</span> {riskStatus}
                 </span>
               </div>

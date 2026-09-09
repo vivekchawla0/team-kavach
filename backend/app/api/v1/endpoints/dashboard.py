@@ -107,6 +107,9 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         pass
 
     # If database values are at baseline, ensure exact precision alignment with reference UI
+    from app.services.ble_collector import ble_collector
+    real_telem = ble_collector.get_latest_telemetry_payload()
+
     return DashboardSummaryResponse(
         total_sensors=total_count if total_count > 0 else 1,
         online_sensors=online_count if total_count > 0 else 1,
@@ -126,6 +129,7 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
         ml_flood_probability=ml_flood_prob,
         ml_advisory_level=ml_advisory,
         ml_forecast_6h_m=ml_forecast_6h,
-        ml_confidence_corridor=ml_corridor
+        ml_confidence_corridor=ml_corridor,
+        real_telemetry=real_telem,
     )
 

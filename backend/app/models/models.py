@@ -68,6 +68,15 @@ class SensorReading(Base):
     signal_strength = Column(Float, default=-65.0, nullable=False)
     inclination_x = Column(Float, default=0.0, nullable=False)
     inclination_y = Column(Float, default=0.0, nullable=False)
+    # Real ESP32 BLE Telemetry & Physical Calibration Fields
+    water_raw = Column(Integer, nullable=True)
+    water_percentage = Column(Float, nullable=True)
+    water_level_cm = Column(Float, nullable=True)
+    rain_raw = Column(Integer, nullable=True)
+    rain_percentage = Column(Float, nullable=True)
+    rain_intensity = Column(Float, nullable=True)
+    bluetooth_status = Column(String(50), default="ONLINE", nullable=True)
+    calibration_status = Column(String(50), default="CALIBRATED", nullable=True)
     timestamp = Column(DateTime(timezone=True), default=utcnow, index=True, nullable=False)
     created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
 

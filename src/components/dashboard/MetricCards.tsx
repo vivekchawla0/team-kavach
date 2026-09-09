@@ -1,20 +1,45 @@
 import React from 'react';
-import { Radio, Droplets, CloudRain, AlertTriangle, ArrowUp, ArrowRight } from 'lucide-react';
+import { Radio, Droplets, CloudRain, AlertTriangle, ArrowUp, ArrowDown, ArrowRight } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 
 export const MetricCards: React.FC = () => {
-  const { summary } = useDashboard();
+  const { realTelemetry } = useDashboard();
 
-  // Single Real Sensor Prototype deployment: 1 Online, 0 Offline
+  const isOnline = realTelemetry?.bluetooth_status === 'ONLINE';
+  const hasData = realTelemetry && realTelemetry.water_level_cm !== null;
+
+  // Single Real Sensor Prototype deployment
   const totalSensors = 1;
-  const onlineSensors = 1;
-  const offlineSensors = 0;
+  const onlineSensors = isOnline ? 1 : 0;
+  const offlineSensors = isOnline ? 0 : 1;
 
-  const currentWaterLevel = summary?.average_water_level_m ?? 3.17;
-  const currentRainfall = summary?.current_rainfall_mm_hr ?? 65;
-  const floodRiskLevel = summary?.flood_risk_level || 'CRITICAL';
-  const floodRiskText = summary?.flood_risk_text || 'Extreme flood conditions';
-  const aiProb = summary?.ml_flood_probability ?? 8.5;
+  const waterLevelCm = realTelemetry?.water_level_cm;
+  const waterRaw = realTelemetry?.water_raw;
+  const riseRate = realTelemetry?.rise_rate_cm_min ?? 0.0;
+
+  const rainIntensity = realTelemetry?.rain_intensity;
+  const rainRaw = realTelemetry?.rain_raw;
+  const rainPct = realTelemetry?.rain_percentage;
+
+  const floodRiskLevel: string = (realTelemetry?.flood_risk_level as string) || (isOnline ? 'SAFE' : 'OFFLINE');
+  const floodRiskText = realTelemetry?.flood_risk_text || (isOnline ? 'Nominal prototype level' : 'Waiting for real telemetry...');
+  const riskScore = realTelemetry?.flood_risk_score ?? 20.0;
+
+  // Determine Risk Badge styling
+  const getRiskColor = (level: string) => {
+    switch (level) {
+      case 'CRITICAL':
+        return 'text-rose-600 bg-rose-50 border-rose-200';
+      case 'DANGER':
+        return 'text-orange-600 bg-orange-50 border-orange-200';
+      case 'WARNING':
+        return 'text-amber-600 bg-amber-50 border-amber-200';
+      case 'SAFE':
+        return 'text-emerald-600 bg-emerald-50 border-emerald-200';
+      default:
+        return 'text-slate-500 bg-slate-50 border-slate-200';
+    }
+  };
 
   return (
     <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5" aria-label="Key Hydrological Metrics">
@@ -39,24 +64,30 @@ export const MetricCards: React.FC = () => {
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 mt-2 text-xs font-semibold text-emerald-600">
-            <ArrowUp className="w-3 h-3 text-emerald-600" />
-            <span>{onlineSensors} Online • {offlineSensors} Offline</span>
+          <div className="flex items-center gap-1.5 mt-2 text-xs font-semibold">
+            {isOnline ? (
+              <>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-emerald-600">{onlineSensors} Online • {offlineSensors} Offline</span>
+              </>
+            ) : (
+              <>
+                <span className="w-2 h-2 rounded-full bg-rose-500" />
+                <span className="text-rose-600">0 Online • 1 Offline</span>
+              </>
+            )}
           </div>
         </div>
 
         <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
           <span className="font-medium text-slate-600">Barpeta Station FW-001</span>
-          <a
-            href="#map-section"
-            className="inline-flex items-center gap-1 text-sky-600 hover:text-sky-800 font-semibold transition-colors"
-          >
-            Active Telemetry <ArrowRight className="w-3 h-3" />
-          </a>
+          <span className="inline-flex items-center gap-1 text-sky-600 font-semibold">
+            {isOnline ? 'BLE Linked' : 'BLE Disconnected'}
+          </span>
         </div>
       </div>
 
-      {/* 2. CURRENT WATER LEVEL */}
+      {/* 2. CURRENT WATER LEVEL (Calibrated Centimeters) */}
       <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center text-sky-600">
@@ -69,20 +100,33 @@ export const MetricCards: React.FC = () => {
 
         <div className="mt-4 flex items-baseline justify-between">
           <div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight font-sans">
-                {currentWaterLevel.toFixed(2)}
-              </span>
-              <span className="text-base font-semibold text-slate-500">m</span>
-            </div>
+            {hasData ? (
+              <>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight font-sans">
+                    {waterLevelCm?.toFixed(2)}
+                  </span>
+                  <span className="text-base font-semibold text-slate-500">cm</span>
+                </div>
 
-            <div className="flex items-center gap-1 mt-2 text-xs font-semibold text-rose-600">
-              <ArrowUp className="w-3 h-3" />
-              <span>+0.24 m/hr rise rate</span>
-            </div>
+                <div className={`flex items-center gap-1 mt-2 text-xs font-semibold ${riseRate > 0 ? 'text-rose-600' : 'text-slate-500'}`}>
+                  {riseRate > 0 ? <ArrowUp className="w-3 h-3 text-rose-600" /> : <ArrowDown className="w-3 h-3 text-slate-400" />}
+                  <span>{riseRate >= 0 ? '+' : ''}{riseRate.toFixed(2)} cm/min rise rate</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl sm:text-3xl font-extrabold text-slate-400 tracking-tight font-sans">
+                  OFFLINE
+                </div>
+                <div className="text-xs font-medium text-slate-400 mt-2">
+                  Waiting for real telemetry...
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Mini Wave Sparkline matching reference */}
+          {/* Mini Wave Sparkline */}
           <div className="w-16 h-8 shrink-0 flex items-end">
             <svg className="w-full h-full overflow-visible" viewBox="0 0 60 25" fill="none">
               <path
@@ -107,14 +151,18 @@ export const MetricCards: React.FC = () => {
         </div>
 
         <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-          <span className="text-slate-500 font-medium">Warning: 3.00 m</span>
-          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-50 text-rose-600 border border-rose-200">
-            Above Warning
+          <span className="text-slate-500 font-medium">
+            {hasData ? `Raw ADC: ${waterRaw} • Live ESP32` : 'Warning: 6.00 cm'}
+          </span>
+          <span className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
+            hasData && (waterLevelCm ?? 0) >= 6.0 ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-emerald-50 text-emerald-600 border-emerald-200'
+          }`}>
+            {hasData ? ((waterLevelCm ?? 0) >= 6.0 ? 'Above Warning' : 'Safe Depth') : 'Offline'}
           </span>
         </div>
       </div>
 
-      {/* 3. CURRENT RAINFALL */}
+      {/* 3. CURRENT RAINFALL (Calibrated Rain Sensor Intensity) */}
       <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center text-sky-600">
@@ -127,38 +175,54 @@ export const MetricCards: React.FC = () => {
 
         <div className="mt-4 flex items-baseline justify-between">
           <div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight font-sans">
-                {Math.round(currentRainfall)}
-              </span>
-              <span className="text-base font-semibold text-slate-500">mm/hr</span>
-            </div>
+            {hasData ? (
+              <>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight font-sans">
+                    {rainIntensity?.toFixed(1)}
+                  </span>
+                  <span className="text-base font-semibold text-slate-500">/ 10</span>
+                </div>
 
-            <div className="flex items-center gap-1 mt-2 text-xs font-semibold text-rose-600">
-              <ArrowUp className="w-3 h-3" />
-              <span>+40% vs. baseline</span>
-            </div>
+                <div className="flex items-center gap-1 mt-2 text-xs font-semibold text-sky-600">
+                  <span>{rainPct?.toFixed(0) ?? 0}% surface moisture</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl sm:text-3xl font-extrabold text-slate-400 tracking-tight font-sans">
+                  OFFLINE
+                </div>
+                <div className="text-xs font-medium text-slate-400 mt-2">
+                  Waiting for real telemetry...
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Mini Bar Chart Graphic matching reference */}
+          {/* Mini Bar Chart Graphic */}
           <div className="flex items-end gap-1 h-8 shrink-0">
-            <div className="w-1.5 h-3 rounded-t bg-sky-300" />
-            <div className="w-1.5 h-4 rounded-t bg-sky-400" />
-            <div className="w-1.5 h-5 rounded-t bg-sky-500" />
-            <div className="w-1.5 h-7 rounded-t bg-sky-600" />
-            <div className="w-1.5 h-8 rounded-t bg-sky-700" />
+            <div className={`w-1.5 h-3 rounded-t ${hasData && (rainIntensity ?? 0) >= 2 ? 'bg-sky-500' : 'bg-slate-200'}`} />
+            <div className={`w-1.5 h-4 rounded-t ${hasData && (rainIntensity ?? 0) >= 4 ? 'bg-sky-500' : 'bg-slate-200'}`} />
+            <div className={`w-1.5 h-5 rounded-t ${hasData && (rainIntensity ?? 0) >= 6 ? 'bg-sky-600' : 'bg-slate-200'}`} />
+            <div className={`w-1.5 h-7 rounded-t ${hasData && (rainIntensity ?? 0) >= 8 ? 'bg-sky-700' : 'bg-slate-200'}`} />
+            <div className={`w-1.5 h-8 rounded-t ${hasData && (rainIntensity ?? 0) >= 9 ? 'bg-sky-800' : 'bg-slate-200'}`} />
           </div>
         </div>
 
         <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-          <span className="text-slate-500 font-medium">Threshold: 25 mm/hr</span>
-          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-50 text-rose-600 border border-rose-200">
-            Heavy Downpour
+          <span className="text-slate-500 font-medium">
+            {hasData ? `Raw ADC: ${rainRaw} • Rain Intensity` : 'Threshold: Level 6.0'}
+          </span>
+          <span className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
+            hasData && (rainIntensity ?? 0) >= 6.0 ? 'bg-rose-50 text-rose-600 border-rose-200' : 'bg-sky-50 text-sky-600 border-sky-200'
+          }`}>
+            {hasData ? ((rainIntensity ?? 0) >= 6.0 ? 'Active Downpour' : 'Light / Clear') : 'Offline'}
           </span>
         </div>
       </div>
 
-      {/* 4. FLOOD RISK LEVEL */}
+      {/* 4. FLOOD RISK LEVEL (Calculated from Real Calibrated Water Level) */}
       <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center text-rose-600">
@@ -171,12 +235,19 @@ export const MetricCards: React.FC = () => {
 
         <div className="mt-4">
           <div className="flex items-center gap-2">
-            <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-rose-600 font-sans">
+            <span className={`text-2xl sm:text-3xl font-extrabold tracking-tight font-sans ${
+              floodRiskLevel === 'CRITICAL' ? 'text-rose-600' :
+              floodRiskLevel === 'DANGER' ? 'text-orange-600' :
+              floodRiskLevel === 'WARNING' ? 'text-amber-600' :
+              floodRiskLevel === 'SAFE' ? 'text-emerald-600' : 'text-slate-400'
+            }`}>
               {floodRiskLevel}
             </span>
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-              AI {aiProb}%
-            </span>
+            {hasData && (
+              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${getRiskColor(floodRiskLevel)}`}>
+                Score {riskScore.toFixed(0)}
+              </span>
+            )}
           </div>
 
           <p className="text-xs font-medium text-slate-500 mt-2 truncate">
@@ -185,9 +256,9 @@ export const MetricCards: React.FC = () => {
         </div>
 
         <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-          <span className="text-slate-500 font-medium">Priority Alert Level 4</span>
-          <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-50 text-rose-600 border border-rose-200">
-            Immediate Action
+          <span className="text-slate-500 font-medium">Safe: &lt;6cm • Danger: &gt;10cm</span>
+          <span className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${getRiskColor(floodRiskLevel)}`}>
+            {isOnline ? 'Live Calibrated' : 'ESP32 Offline'}
           </span>
         </div>
       </div>

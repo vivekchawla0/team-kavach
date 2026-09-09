@@ -194,6 +194,7 @@ class DashboardSummaryResponse(BaseModel):
     ml_advisory_level: Optional[str] = None
     ml_forecast_6h_m: Optional[float] = None
     ml_confidence_corridor: Optional[str] = None
+    real_telemetry: Optional[Dict[str, Any]] = None
 
 
 

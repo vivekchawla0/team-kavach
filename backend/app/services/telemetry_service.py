@@ -193,5 +193,177 @@ class TelemetryService:
 
         return reading, alerts_payload
 
+    @staticmethod
+    async def process_real_esp32_telemetry(db: Session, raw_data: dict) -> Tuple[SensorReading, dict, List[dict]]:
+        from app.services.ble_collector import ble_collector
+        from app.models.models import Alert
+
+        now = utcnow()
+        calibrated = ble_collector.ingest_payload(raw_data)
+        water_cm = calibrated["water_level_cm"]
+        water_raw = calibrated["water_raw"]
+        rain_intensity = calibrated["rain_intensity"]
+        rain_raw = calibrated["rain_raw"]
+        rise_rate = calibrated.get("rise_rate_cm_min", 0.0)
+        risk_level = calibrated["flood_risk_level"]
+
+        # 1. Fetch or create Barpeta prototype sensor FW-001
+        sensor = db.query(Sensor).filter(Sensor.sensor_id == "FW-001").first()
+        if not sensor:
+            sensor = Sensor(
+                sensor_id="FW-001",
+                name="Barpeta Station FW-001",
+                location_name="Chaulkhowa River Basin, Barpeta, Assam",
+                latitude=26.3200,
+                longitude=91.0050,
+                status=risk_level,
+                warning_threshold=6.0,
+                danger_threshold=10.0,
+                created_at=now,
+            )
+            db.add(sensor)
+            db.flush()
+
+        # Update sensor live values
+        sensor.status = risk_level
+        sensor.current_water_level = water_cm
+        sensor.water_rise_rate = rise_rate
+        sensor.last_seen = now
+        sensor.updated_at = now
+
+        # 2. Persist SensorReading with real ESP32 ADC & calibrated values
+        reading = SensorReading(
+            sensor_id=sensor.sensor_id,
+            water_level=water_cm,
+            water_level_cm=water_cm,
+            water_raw=water_raw,
+            water_percentage=calibrated.get("water_percentage", 0.0),
+            water_rise_rate=rise_rate,
+            rainfall=rain_intensity,
+            rain_intensity=rain_intensity,
+            rain_raw=rain_raw,
+            rain_percentage=calibrated.get("rain_percentage", 0.0),
+            soil_moisture=calibrated.get("water_percentage", 0.0),
+            temperature=27.0,
+            battery=82.0,
+            signal_strength=-65.0,
+            inclination_x=0.0,
+            inclination_y=0.0,
+            bluetooth_status="ONLINE",
+            calibration_status="CALIBRATED",
+            timestamp=now,
+            created_at=now,
+        )
+        db.add(reading)
+        db.flush()
+
+        # 3. State-change alert generation (Warning > 6cm, Danger > 10cm, Critical > 13cm)
+        triggered_alerts = []
+        alert_spec = None
+        if water_cm >= 13.0:
+            alert_spec = {
+                "type": "CRITICAL_FLOOD_LEVEL",
+                "severity": "CRITICAL",
+                "title": "Critical Prototype Flood Threshold Exceeded",
+                "message": f"Real ESP32 water level reached {water_cm:.2f} cm (critical threshold 13.0 cm exceeded)",
+            }
+        elif water_cm >= 10.0:
+            alert_spec = {
+                "type": "DANGER_FLOOD_LEVEL",
+                "severity": "CRITICAL",
+                "title": "Danger Prototype Flood Threshold Exceeded",
+                "message": f"Real ESP32 water level reached {water_cm:.2f} cm (danger threshold 10.0 cm exceeded)",
+            }
+        elif water_cm >= 6.0:
+            alert_spec = {
+                "type": "WARNING_FLOOD_LEVEL",
+                "severity": "WARNING",
+                "title": "Warning Prototype Threshold Reached",
+                "message": f"Real ESP32 water level reached {water_cm:.2f} cm (warning threshold 6.0 cm reached)",
+            }
+
+        if alert_spec:
+            # Check if recently triggered within 60s to prevent spamming
+            recent_alert = (
+                db.query(Alert)
+                .filter(
+                    Alert.sensor_id == sensor.sensor_id,
+                    Alert.type == alert_spec["type"],
+                    Alert.status == "ACTIVE",
+                    Alert.created_at >= now - timedelta(seconds=60),
+                )
+                .first()
+            )
+            if not recent_alert:
+                new_alert = Alert(
+                    sensor_id=sensor.sensor_id,
+                    type=alert_spec["type"],
+                    severity=alert_spec["severity"],
+                    title=alert_spec["title"],
+                    message=alert_spec["message"],
+                    status="ACTIVE",
+                    is_read=False,
+                    created_at=now,
+                )
+                db.add(new_alert)
+                db.flush()
+                triggered_alerts.append(new_alert)
+
+        db.commit()
+        db.refresh(reading)
+
+        # 4. Broadcast live WebSocket event
+        alerts_payload = [
+            {
+                "id": a.id,
+                "sensor_id": a.sensor_id,
+                "type": a.type,
+                "severity": a.severity,
+                "title": a.title,
+                "message": a.message,
+                "created_at": a.created_at.isoformat(),
+            }
+            for a in triggered_alerts
+        ]
+
+        ws_payload = {
+            "event": "telemetry_update",
+            "source": "ESP32_BLE",
+            "sensor": {
+                "sensor_id": sensor.sensor_id,
+                "name": sensor.name,
+                "water_level": water_cm,
+                "water_level_cm": water_cm,
+                "rise_rate": rise_rate,
+                "status": sensor.status,
+                "battery": sensor.battery,
+                "last_seen": sensor.last_seen.isoformat(),
+            },
+            "reading": {
+                "id": reading.id,
+                "water_level": water_cm,
+                "water_level_cm": water_cm,
+                "water_raw": water_raw,
+                "rainfall": rain_intensity,
+                "rain_intensity": rain_intensity,
+                "rain_raw": rain_raw,
+                "timestamp": reading.timestamp.isoformat(),
+            },
+            "real_telemetry": calibrated,
+            "alerts": alerts_payload,
+            "risk": {
+                "score": calibrated["flood_risk_score"],
+                "level": calibrated["flood_risk_level"],
+                "text": calibrated["flood_risk_text"],
+            },
+        }
+
+        try:
+            await ws_manager.broadcast(ws_payload)
+        except Exception as e:
+            logger.warning(f"Failed to broadcast real ESP32 WebSocket payload: {e}")
+
+        return reading, calibrated, alerts_payload
+
 
 telemetry_service = TelemetryService()

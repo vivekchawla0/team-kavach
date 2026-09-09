@@ -9,6 +9,7 @@ import {
   TimeRange,
   SimulatorScenario,
   WebSocketTelemetryEvent,
+  RealTelemetry,
 } from '@/types';
 import { api } from '@/services/api';
 import { wsClient } from '@/services/websocket';
@@ -28,6 +29,8 @@ interface DashboardContextType {
   selectedDetailSensor: Sensor | null;
   activeScenario: SimulatorScenario | null;
   isLoading: boolean;
+  realTelemetry: RealTelemetry | null;
+  telemetryHistory: any[];
   setMapFilter: (filter: string) => void;
   setTableSearch: (term: string) => void;
   setTableStatus: (status: string) => void;
@@ -45,12 +48,14 @@ const DashboardContext = createContext<DashboardContextType | undefined>(undefin
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [sensors, setSensors] = useState<Sensor[]>([]);
-  const [selectedSensorId, setSelectedSensorId] = useState<string>('FW-005');
+  const [selectedSensorId, setSelectedSensorId] = useState<string>('FW-001');
   const [trendsData, setTrendsData] = useState<WaterLevelAnalytics | null>(null);
   const [trendRange, setTrendRange] = useState<TimeRange>('24H');
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [weatherCurrent, setWeatherCurrent] = useState<WeatherCurrent | null>(null);
   const [weatherForecast, setWeatherForecast] = useState<WeatherForecastSummary | null>(null);
+  const [realTelemetry, setRealTelemetry] = useState<RealTelemetry | null>(null);
+  const [telemetryHistory, setTelemetryHistory] = useState<any[]>([]);
 
   const [mapFilter, setMapFilter] = useState<string>('ALL');
   const [tableSearch, setTableSearch] = useState<string>('');
@@ -72,12 +77,14 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Main refresh routine
   const refreshDashboard = useCallback(async () => {
     try {
-      const [sum, sList, al, wCurr, wFore] = await Promise.all([
+      const [sum, sList, al, wCurr, wFore, realTelem, telemHist] = await Promise.all([
         api.getDashboardSummary(),
         api.getSensors(),
         api.getAlerts(5),
         api.getWeatherCurrent().catch(() => null),
         api.getWeatherForecast().catch(() => null),
+        api.getLatestTelemetry().catch(() => null),
+        api.getTelemetryHistory(50).catch(() => null),
       ]);
 
       setSummary(sum);
@@ -85,6 +92,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setAlerts(al);
       if (wCurr) setWeatherCurrent(wCurr);
       if (wFore) setWeatherForecast(wFore);
+      if (realTelem) setRealTelemetry(realTelem);
+      if (telemHist?.readings) setTelemetryHistory(telemHist.readings);
 
       await loadTrends(selectedSensorId, trendRange);
     } catch (err) {
@@ -99,6 +108,23 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     refreshDashboard();
   }, [refreshDashboard]);
 
+  // Periodic 5-second polling for real ESP32 telemetry & offline heartbeat
+  useEffect(() => {
+    const timer = setInterval(() => {
+      api.getLatestTelemetry()
+        .then((rt) => {
+          if (rt) setRealTelemetry(rt);
+        })
+        .catch(() => {});
+      api.getTelemetryHistory(50)
+        .then((hist) => {
+          if (hist?.readings) setTelemetryHistory(hist.readings);
+        })
+        .catch(() => {});
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Handle range or sensor change
   useEffect(() => {
     loadTrends(selectedSensorId, trendRange);
@@ -107,6 +133,11 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // WebSocket subscription for zero-refresh real-time updates
   useEffect(() => {
     const handleWs = (evt: WebSocketTelemetryEvent) => {
+      // Ingest live real ESP32 telemetry
+      if (evt.real_telemetry) {
+        setRealTelemetry(evt.real_telemetry);
+      }
+
       if (evt.event === 'telemetry_update' && evt.sensor) {
         setSensors((prev) =>
           prev.map((s) =>
@@ -185,6 +216,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         selectedDetailSensor,
         activeScenario,
         isLoading,
+        realTelemetry,
+        telemetryHistory,
         setMapFilter,
         setTableSearch,
         setTableStatus,

@@ -11,6 +11,7 @@ import {
   BlynkStatusResponse,
   BlynkTestResponse,
   BlynkAlertResponse,
+  RealTelemetry,
 } from '@/types';
 
 const API_BASE = window.location.origin.includes(':8000')
@@ -124,6 +125,16 @@ export const api = {
       body: JSON.stringify({ action, pin, value }),
     });
     return handleResponse<BlynkAlertResponse>(res);
+  },
+
+  getLatestTelemetry: async (): Promise<RealTelemetry> => {
+    const res = await fetch(`${API_BASE}/telemetry/latest`);
+    return handleResponse<RealTelemetry>(res);
+  },
+
+  getTelemetryHistory: async (limit: number = 50): Promise<{ status: string; count: number; readings: any[] }> => {
+    const res = await fetch(`${API_BASE}/telemetry/history?limit=${limit}`);
+    return handleResponse<{ status: string; count: number; readings: any[] }>(res);
   },
 };
 

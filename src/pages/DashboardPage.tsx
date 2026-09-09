@@ -7,6 +7,7 @@ import { EnvironmentalData } from '@/components/weather/EnvironmentalData';
 import { RecentAlerts } from '@/components/alerts/RecentAlerts';
 import { BlynkStatusCard } from '@/components/dashboard/BlynkStatusCard';
 import { SensorDetailModal } from '@/components/sensors/SensorDetailModal';
+import { ESP32DebugPanel } from '@/components/dashboard/ESP32DebugPanel';
 import { ShieldCheck } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 
@@ -49,6 +50,11 @@ export const DashboardPage: React.FC = () => {
       {/* 4. Full-Width Real-Data Alert Center matching reference */}
       <div className="w-full">
         <RecentAlerts />
+      </div>
+
+      {/* 5. Collapsible ESP32 Physical Prototype Live Diagnostics Panel */}
+      <div className="w-full">
+        <ESP32DebugPanel />
       </div>
 
       {/* Subtle Operational Telemetry Health Bar */}
